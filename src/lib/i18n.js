@@ -1,0 +1,143 @@
+import { normalizeLocale } from '@/lib/utils'
+
+const baseMessages = {
+  ar: {
+    nav_home: 'الرئيسية',
+    nav_universities: 'الجامعات',
+    nav_scholarships: 'المنح',
+    nav_blog: 'المدونة',
+    nav_apply_now: 'تقديم الآن',
+    nav_choose_language: 'اختر اللغة',
+    nav_choose_language_desc: 'اختر من بين اللغات المدعومة لتغيير واجهة الموقع.',
+    home_title_universities: 'الجامعات المميزة',
+    home_subtitle_universities: 'استكشف أفضل الجامعات',
+    home_title_scholarships: 'المنح الدراسية المتاحة',
+    home_subtitle_scholarships: 'فرص ذهبية للحصول على منحة دراسية مجانية',
+    home_title_blog: 'آخر المقالات والأخبار',
+    home_subtitle_blog: 'تابع أحدث الأخبار والنصائح للدراسة',
+    grid_no_scholarships: 'لا توجد منح متاحة حالياً',
+    grid_no_universities: 'لا توجد جامعات متاحة حالياً',
+    grid_no_posts: 'لا توجد مقالات متاحة حالياً',
+    grid_read_more: 'اقرأ المزيد',
+    scholarships_university_label: 'الجامعة',
+    scholarships_value_label: 'قيمة المنحة',
+    scholarships_deadline_label: 'آخر موعد للتقديم',
+    students_suffix: 'طالب',
+    footer_quick_links: 'روابط سريعة',
+    footer_services: 'خدماتنا',
+    footer_contact_us: 'تواصل معنا',
+    footer_tagline: 'دليلك الشامل للحصول على منحة دراسية',
+    footer_copyright: '© 2024 منح. جميع الحقوق محفوظة.',
+    service_consulting: 'استشارات تعليمية',
+    service_application_help: 'مساعدة في التقديم',
+    service_translation: 'خدمات الترجمة',
+    service_support: 'دعم الطلاب',
+    back_home: 'العودة للرئيسية',
+    back_scholarship: 'العودة لصفحة المنحة',
+    scholarship_details_title: 'تفاصيل المنحة',
+    scholarship_requirements_title: 'شروط التقديم',
+    scholarship_edit_mode: 'وضع التحرير',
+    scholarship_edit_finish: 'إنهاء التحرير',
+    scholarship_ready_title: 'هل أنت مستعد للتقديم؟',
+    scholarship_ready_text: 'لا تفوت هذه الفرصة الذهبية! قدم الآن واحصل على منحة دراسية مجانية',
+    scholarship_start_apply: 'ابدأ التقديم الآن',
+    scholarship_apply_whatsapp: 'التقديم عبر واتساب',
+    app_form_title: 'نموذج التقديم على المنح',
+    app_form_intro: 'يرجى تعبئة البيانات التالية لإرسال طلب التقديم. هذه نسخة أولية للتجربة.',
+    app_name: 'الاسم الكامل',
+    app_email: 'البريد الإلكتروني',
+    app_phone: 'رقم الهاتف',
+    app_program: 'التخصص المطلوب',
+    app_choose_program: 'اختر التخصص',
+    app_certificate: 'الشهادة (سحب وإفلات)',
+    upload_in_progress: 'جارٍ الرفع...',
+    file_attached: 'تم إرفاق الملف',
+    drop_or_click: 'اسحب وأفلت الشهادة هنا أو اضغط للاختيار (PDF أو صورة)',
+    app_submit: 'إرسال الطلب',
+    app_submitted_success: 'تم إرسال طلبك بنجاح (تجريبي).',
+    app_will_contact: 'سنعود إليك قريبًا. يمكنك العودة لصفحة المنحة أو الصفحة الرئيسية.',
+    app_back_scholarship: 'العودة لصفحة المنحة',
+    app_back_home: 'العودة للرئيسية'
+  },
+  en: {
+    nav_home: 'Home',
+    nav_universities: 'Universities',
+    nav_scholarships: 'Scholarships',
+    nav_blog: 'Blog',
+    nav_apply_now: 'Apply Now',
+    nav_choose_language: 'Choose language',
+    nav_choose_language_desc: 'Select a supported language to change the site UI.',
+    home_title_universities: 'Featured Universities',
+    home_subtitle_universities: 'Explore top universities',
+    home_title_scholarships: 'Available Scholarships',
+    home_subtitle_scholarships: 'Golden opportunities to get a free scholarship',
+    home_title_blog: 'Latest Articles & News',
+    home_subtitle_blog: 'Follow the latest news and study tips',
+    grid_no_scholarships: 'No scholarships available',
+    grid_no_universities: 'No universities available',
+    grid_no_posts: 'No posts available',
+    grid_read_more: 'Read more',
+    scholarships_university_label: 'University',
+    scholarships_value_label: 'Scholarship value',
+    scholarships_deadline_label: 'Application deadline',
+    students_suffix: 'students',
+    footer_quick_links: 'Quick Links',
+    footer_services: 'Our Services',
+    footer_contact_us: 'Contact Us',
+    footer_tagline: 'Your complete guide to getting a scholarship',
+    footer_copyright: '© 2024 Grants. All rights reserved.',
+    service_consulting: 'Educational consulting',
+    service_application_help: 'Application assistance',
+    service_translation: 'Translation services',
+    service_support: 'Student support',
+    back_home: 'Back to Home',
+    back_scholarship: 'Back to scholarship',
+    scholarship_details_title: 'Scholarship Details',
+    scholarship_requirements_title: 'Application Requirements',
+    scholarship_edit_mode: 'Edit mode',
+    scholarship_edit_finish: 'Finish editing',
+    scholarship_ready_title: 'Ready to apply?',
+    scholarship_ready_text: 'Don’t miss this opportunity! Apply now and get a free scholarship',
+    scholarship_start_apply: 'Start application now',
+    scholarship_apply_whatsapp: 'Apply via WhatsApp',
+    app_form_title: 'Scholarship Application Form',
+    app_form_intro: 'Please fill the following data to submit your application. This is a preview version.',
+    app_name: 'Full name',
+    app_email: 'Email',
+    app_phone: 'Phone number',
+    app_program: 'Desired program',
+    app_choose_program: 'Choose a program',
+    app_certificate: 'Certificate (Drag & Drop)',
+    upload_in_progress: 'Uploading...',
+    file_attached: 'File attached',
+    drop_or_click: 'Drag and drop here or click to select (PDF or image)',
+    app_submit: 'Submit',
+    app_submitted_success: 'Your application was sent successfully (demo).',
+    app_will_contact: 'We will contact you soon. You can return to the scholarship page or home.',
+    app_back_scholarship: 'Back to scholarship',
+    app_back_home: 'Back to home'
+  }
+}
+
+const localeFiles = import.meta.glob('@/locales/*.json', { eager: true })
+const loadedMessages = {}
+for (const p in localeFiles) {
+  const mod = localeFiles[p]
+  const code = p.split('/').pop().replace('.json','')
+  loadedMessages[code] = mod.default || mod
+}
+
+const messages = {}
+for (const code in baseMessages) {
+  messages[code] = { ...baseMessages[code], ...(loadedMessages[code] || {}) }
+}
+for (const code in loadedMessages) {
+  if (!messages[code]) messages[code] = loadedMessages[code]
+}
+
+export function t(locale, key) {
+  const l = normalizeLocale(locale || 'ar')
+  return messages[l]?.[key] ?? messages['en']?.[key] ?? key
+}
+
+export default { t }
