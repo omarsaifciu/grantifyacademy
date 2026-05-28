@@ -3,6 +3,14 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
+# Build Args (passed from Dokploy Build Args)
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Set environment variables for Vite build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
