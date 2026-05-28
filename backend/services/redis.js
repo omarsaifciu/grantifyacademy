@@ -6,40 +6,57 @@ let isConnected = false;
 
 const connectRedis = async () => {
   try {
-    // Build Redis config from individual variables for better encoding
-    // Force 127.0.0.1 to avoid ENOTFOUND issues
-    const redisConfig = {
-      host: '127.0.0.1',
-      port: parseInt(process.env.REDIS_PORT) || 6379,
-      username: process.env.REDIS_USERNAME,
-      password: process.env.REDIS_PASSWORD,
-    };
+    let redisClientInstance;
+    
+    // Use individual config variables first (avoids URL encoding issues)
+    if (process.env.REDIS_HOST) {
+      const redisConfig = {
+        host: process.env.REDIS_HOST || '127.0.0.1',
+        port: parseInt(process.env.REDIS_PORT) || 6379,
+        username: process.env.REDIS_USERNAME,
+        password: process.env.REDIS_PASSWORD,
+        db: parseInt(process.env.REDIS_DB) || 0,
+      };
 
-    // Filter out undefined values
-    Object.keys(redisConfig).forEach(key => redisConfig[key] === undefined && delete redisConfig[key]);
+      // Filter out undefined values
+      Object.keys(redisConfig).forEach(key => redisConfig[key] === undefined && delete redisConfig[key]);
 
-    console.log('🔄 Connecting to Redis with config:', {
-      host: redisConfig.host,
-      port: redisConfig.port,
-      username: redisConfig.username,
-      password: redisConfig.password ? '***' : undefined
-    });
+      console.log('🔄 Connecting to Redis with config:', {
+        host: redisConfig.host,
+        port: redisConfig.port,
+        username: redisConfig.username,
+        password: redisConfig.password ? '***' : undefined
+      });
 
-    redisClient = new Redis(redisConfig);
+      redisClientInstance = new Redis(redisConfig);
+    } else if (process.env.REDIS_URL) {
+      console.log('🔄 Connecting to Redis using REDIS_URL');
+      redisClientInstance = new Redis(process.env.REDIS_URL);
+    } else {
+      console.log('🔄 Connecting to local Redis');
+      redisClientInstance = new Redis();
+    }
 
-    redisClient.on('connect', () => {
-      console.log('✅ Connected to Redis successfully');
-      isConnected = true;
-    });
+    redisClient = redisClientInstance;
 
-    redisClient.on('error', (err) => {
-      console.error('❌ Redis connection error:', err.message);
-      isConnected = false;
-    });
+    // Wait for the connection to be established
+    await new Promise((resolve, reject) => {
+      redisClient.on('connect', () => {
+        console.log('✅ Connected to Redis successfully');
+        isConnected = true;
+        resolve();
+      });
 
-    redisClient.on('close', () => {
-      console.log('⚠️ Redis connection closed');
-      isConnected = false;
+      redisClient.on('error', (err) => {
+        console.error('❌ Redis connection error:', err.message);
+        isConnected = false;
+        reject(err);
+      });
+
+      redisClient.on('close', () => {
+        console.log('⚠️ Redis connection closed');
+        isConnected = false;
+      });
     });
 
     return redisClient;
@@ -63,7 +80,7 @@ const getCache = async (key) => {
   }
 };
 
-const setCache = async (key, value, ttl = process.env.CACHE_TTL || 300) => {
+const setCache = async (key, value, ttl = process.env.REDIS_CACHE_TTL || process.env.CACHE_TTL || 300) => {
   if (!isConnected || !redisClient) {
     return false;
   }
