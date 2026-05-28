@@ -6,7 +6,26 @@ let isConnected = false;
 
 const connectRedis = async () => {
   try {
-    redisClient = new Redis(process.env.REDIS_URL);
+    // Build Redis config from individual variables for better encoding
+    // Force 127.0.0.1 to avoid ENOTFOUND issues
+    const redisConfig = {
+      host: '127.0.0.1',
+      port: parseInt(process.env.REDIS_PORT) || 6379,
+      username: process.env.REDIS_USERNAME,
+      password: process.env.REDIS_PASSWORD,
+    };
+
+    // Filter out undefined values
+    Object.keys(redisConfig).forEach(key => redisConfig[key] === undefined && delete redisConfig[key]);
+
+    console.log('🔄 Connecting to Redis with config:', {
+      host: redisConfig.host,
+      port: redisConfig.port,
+      username: redisConfig.username,
+      password: redisConfig.password ? '***' : undefined
+    });
+
+    redisClient = new Redis(redisConfig);
 
     redisClient.on('connect', () => {
       console.log('✅ Connected to Redis successfully');
