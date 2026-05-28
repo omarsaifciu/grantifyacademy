@@ -8,7 +8,7 @@ import { ScholarshipsGrid } from '@/components/ScholarshipsGrid';
 import { BlogGrid } from '@/components/BlogGrid';
 import { Footer } from '@/components/Footer';
 import storage, { getDrafts } from '@/lib/storage';
-import heroBg from '../../hero bakgrond/SingaporeUniversity.jpg';
+import heroBg from '@/assets/hero-background/SingaporeUniversity.jpg';
 import { useParams, useLocation } from 'react-router-dom';
 import { buildAlternateLinks } from '@/lib/utils';
 import { t } from '@/lib/i18n';
@@ -42,7 +42,7 @@ const HomePage = () => {
       setUniversities(u.filter((x) => !uIds.has(x.id)))
       setScholarships(s.filter((x) => !sIds.has(x.id)))
       setBlogPosts(b.filter((x) => !bIds.has(x.id)))
-      setSettings(st)
+      setSettings(st || {})
     }
     load()
   }, []);
@@ -60,7 +60,7 @@ const HomePage = () => {
 
       <div className="min-h-screen">
         <Navbar />
-        <Hero backgroundImage={settings.heroBackgroundImage || HERO_BG_IMAGE} />
+        <Hero backgroundImage={settings.heroBackgroundUrl || HERO_BG_IMAGE} />
         
         <motion.section
           initial={{ opacity: 0, y: 50 }}

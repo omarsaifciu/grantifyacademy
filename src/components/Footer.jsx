@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
-import lightLogo from '../../logo/lightmode.png';
-import darkLogo from '../../logo/darkmode.png';
+import lightLogo from '@/assets/logo/lightmode.png';
+import darkLogo from '@/assets/logo/darkmode.png';
 import { t } from '@/lib/i18n';
 import { DEFAULT_LOCALE, isRtlLocale, cn } from '@/lib/utils';
 
