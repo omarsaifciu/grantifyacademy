@@ -6,3 +6,10 @@ dist
 .trae
 tmp_*
 dl_index.html
+# Database backups
+db_backup.sql
+db_backup_cleaned.sql
+*.backup
+*.backup.gz
+clean-backup.cjs
+decompress.cjs

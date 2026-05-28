@@ -43,11 +43,13 @@ export const getCurrentUser = async () => {
   return data?.user ?? null
 }
 
-export const requestPasswordReset = async (email) => {
+export const requestPasswordReset = async (email, locale = 'ar') => {
   if (USE_LOCAL) {
     return { success: true, message: 'في نسخة التجربة المحلية، استخدم admin@example.com / admin123' }
   }
-  const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
+  const redirectTo = typeof window !== 'undefined' 
+    ? `${window.location.origin}/${locale}/reset-password` 
+    : undefined
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
   if (error) {
     return { success: false, message: 'تعذر إرسال رابط الاستعادة. حاول لاحقاً.' }

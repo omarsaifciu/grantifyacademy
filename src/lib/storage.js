@@ -1,5 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-const USE_LOCAL = !import.meta.env.VITE_API_URL && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY)
+
+import supabase from './supabase'
 
 const STORAGE_KEYS = {
   UNIVERSITIES: 'kktc_universities',
@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   DRAFTS_SCHOLARSHIPS: 'kktc_drafts_scholarships',
   DRAFTS_UNIVERSITIES: 'kktc_drafts_universities',
 }
+
+const USE_LOCAL = !supabase
 
 const initializeData = () => {
   if (!USE_LOCAL) return
@@ -146,8 +148,8 @@ export const getUniversities = async () => {
     const data = localStorage.getItem(STORAGE_KEYS.UNIVERSITIES)
     return data ? JSON.parse(data) : []
   }
-  const response = await fetch(`${API_URL}/universities`)
-  return await response.json()
+  const { data } = await supabase.from('universities').select('*').order('name', { ascending: true })
+  return data ?? []
 }
 
 export const getUniversityById = async (id) => {
@@ -155,8 +157,8 @@ export const getUniversityById = async (id) => {
     const list = await getUniversities()
     return list.find(u => u.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/universities/${id}`)
-  return await response.json()
+  const { data } = await supabase.from('universities').select('*').eq('id', id).single()
+  return data ?? null
 }
 
 export const createUniversity = async (university) => {
@@ -167,12 +169,8 @@ export const createUniversity = async (university) => {
     localStorage.setItem(STORAGE_KEYS.UNIVERSITIES, JSON.stringify(updated))
     return item
   }
-  const response = await fetch(`${API_URL}/universities`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(university)
-  })
-  return await response.json()
+  const { data } = await supabase.from('universities').insert(university).select().single()
+  return data
 }
 
 export const updateUniversity = async (id, university) => {
@@ -182,12 +180,8 @@ export const updateUniversity = async (id, university) => {
     localStorage.setItem(STORAGE_KEYS.UNIVERSITIES, JSON.stringify(updated))
     return updated.find(u => u.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/universities/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(university)
-  })
-  return await response.json()
+  const { data } = await supabase.from('universities').update(university).eq('id', id).select().single()
+  return data
 }
 
 export const deleteUniversity = async (id) => {
@@ -197,7 +191,7 @@ export const deleteUniversity = async (id) => {
     localStorage.setItem(STORAGE_KEYS.UNIVERSITIES, JSON.stringify(updated))
     return
   }
-  await fetch(`${API_URL}/universities/${id}`, { method: 'DELETE' })
+  await supabase.from('universities').delete().eq('id', id)
 }
 
 export const getScholarships = async () => {
@@ -205,8 +199,8 @@ export const getScholarships = async () => {
     const data = localStorage.getItem(STORAGE_KEYS.SCHOLARSHIPS)
     return data ? JSON.parse(data) : []
   }
-  const response = await fetch(`${API_URL}/scholarships`)
-  return await response.json()
+  const { data } = await supabase.from('scholarships').select('*').order('deadline', { ascending: true })
+  return data ?? []
 }
 
 export const getScholarshipById = async (id) => {
@@ -214,8 +208,8 @@ export const getScholarshipById = async (id) => {
     const list = await getScholarships()
     return list.find(s => s.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/scholarships/${id}`)
-  return await response.json()
+  const { data } = await supabase.from('scholarships').select('*').eq('id', id).single()
+  return data ?? null
 }
 
 export const createScholarship = async (scholarship) => {
@@ -226,12 +220,8 @@ export const createScholarship = async (scholarship) => {
     localStorage.setItem(STORAGE_KEYS.SCHOLARSHIPS, JSON.stringify(updated))
     return item
   }
-  const response = await fetch(`${API_URL}/scholarships`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(scholarship)
-  })
-  return await response.json()
+  const { data } = await supabase.from('scholarships').insert(scholarship).select().single()
+  return data
 }
 
 export const updateScholarship = async (id, scholarship) => {
@@ -241,12 +231,8 @@ export const updateScholarship = async (id, scholarship) => {
     localStorage.setItem(STORAGE_KEYS.SCHOLARSHIPS, JSON.stringify(updated))
     return updated.find(s => s.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/scholarships/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(scholarship)
-  })
-  return await response.json()
+  const { data } = await supabase.from('scholarships').update(scholarship).eq('id', id).select().single()
+  return data
 }
 
 export const deleteScholarship = async (id) => {
@@ -256,7 +242,7 @@ export const deleteScholarship = async (id) => {
     localStorage.setItem(STORAGE_KEYS.SCHOLARSHIPS, JSON.stringify(updated))
     return
   }
-  await fetch(`${API_URL}/scholarships/${id}`, { method: 'DELETE' })
+  await supabase.from('scholarships').delete().eq('id', id)
 }
 
 export const getBlogPosts = async () => {
@@ -264,8 +250,8 @@ export const getBlogPosts = async () => {
     const data = localStorage.getItem(STORAGE_KEYS.BLOG_POSTS)
     return data ? JSON.parse(data) : []
   }
-  const response = await fetch(`${API_URL}/blog-posts`)
-  return await response.json()
+  const { data } = await supabase.from('blog_posts').select('*').order('date', { ascending: false })
+  return data ?? []
 }
 
 export const getBlogPostById = async (id) => {
@@ -273,8 +259,8 @@ export const getBlogPostById = async (id) => {
     const list = await getBlogPosts()
     return list.find(p => p.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/blog-posts/${id}`)
-  return await response.json()
+  const { data } = await supabase.from('blog_posts').select('*').eq('id', id).single()
+  return data ?? null
 }
 
 export const createBlogPost = async (post) => {
@@ -285,12 +271,8 @@ export const createBlogPost = async (post) => {
     localStorage.setItem(STORAGE_KEYS.BLOG_POSTS, JSON.stringify(updated))
     return item
   }
-  const response = await fetch(`${API_URL}/blog-posts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(post)
-  })
-  return await response.json()
+  const { data } = await supabase.from('blog_posts').insert(post).select().single()
+  return data
 }
 
 export const updateBlogPost = async (id, post) => {
@@ -300,12 +282,8 @@ export const updateBlogPost = async (id, post) => {
     localStorage.setItem(STORAGE_KEYS.BLOG_POSTS, JSON.stringify(updated))
     return updated.find(p => p.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/blog-posts/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(post)
-  })
-  return await response.json()
+  const { data } = await supabase.from('blog_posts').update(post).eq('id', id).select().single()
+  return data
 }
 
 export const deleteBlogPost = async (id) => {
@@ -315,7 +293,7 @@ export const deleteBlogPost = async (id) => {
     localStorage.setItem(STORAGE_KEYS.BLOG_POSTS, JSON.stringify(updated))
     return
   }
-  await fetch(`${API_URL}/blog-posts/${id}`, { method: 'DELETE' })
+  await supabase.from('blog_posts').delete().eq('id', id)
 }
 
 export const getDrafts = async (type) => {
@@ -349,8 +327,8 @@ export const getUsers = async () => {
     const data = localStorage.getItem(STORAGE_KEYS.USERS)
     return data ? JSON.parse(data) : []
   }
-  const response = await fetch(`${API_URL}/users`)
-  return await response.json()
+  const { data } = await supabase.from('users').select('*').order('email', { ascending: true })
+  return data ?? []
 }
 
 export const createUser = async (user) => {
@@ -361,12 +339,8 @@ export const createUser = async (user) => {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated))
     return item
   }
-  const response = await fetch(`${API_URL}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(user)
-  })
-  return await response.json()
+  const { data } = await supabase.from('users').insert(user).select().single()
+  return data
 }
 
 export const updateUser = async (id, updates) => {
@@ -376,12 +350,8 @@ export const updateUser = async (id, updates) => {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated))
     return updated.find(u => u.id === id) ?? null
   }
-  const response = await fetch(`${API_URL}/users/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates)
-  })
-  return await response.json()
+  const { data } = await supabase.from('users').update(updates).eq('id', id).select().single()
+  return data
 }
 
 export const deleteUser = async (id) => {
@@ -391,7 +361,7 @@ export const deleteUser = async (id) => {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated))
     return
   }
-  await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' })
+  await supabase.from('users').delete().eq('id', id)
 }
 
 export const getSettings = async () => {
@@ -399,8 +369,8 @@ export const getSettings = async () => {
     const data = localStorage.getItem(STORAGE_KEYS.SETTINGS)
     return data ? JSON.parse(data) : {}
   }
-  const response = await fetch(`${API_URL}/settings`)
-  return await response.json()
+  const { data } = await supabase.from('settings').select('*').eq('id', 'site').single()
+  return data ?? {}
 }
 
 export const updateSettings = async (updates) => {
@@ -410,12 +380,12 @@ export const updateSettings = async (updates) => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(next))
     return next
   }
-  const response = await fetch(`${API_URL}/settings`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates)
-  })
-  return await response.json()
+  const { data } = await supabase
+    .from('settings')
+    .upsert({ id: 'site', ...updates }, { onConflict: 'id' })
+    .select()
+    .single()
+  return data
 }
 
 export default {

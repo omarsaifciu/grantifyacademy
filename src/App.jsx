@@ -11,6 +11,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import ApplicationPage from '@/pages/ApplicationPage';
 import LoginPage from '@/pages/LoginPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from '@/pages/ResetPasswordPage.jsx';
 import { detectLocale, isRtlLocale } from '@/lib/utils';
 
 function LocaleLayout() {
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/" element={<Navigate to={`/${detectLocale()}/`} replace />} />
         <Route path="/login" element={<Navigate to={`/${detectLocale()}/login`} replace />} />
         <Route path="/forgot-password" element={<Navigate to={`/${detectLocale()}/forgot-password`} replace />} />
+        <Route path="/reset-password" element={<Navigate to={`/${detectLocale()}/reset-password`} replace />} />
         <Route path=":locale" element={<LocaleLayout />}> 
           <Route index element={<HomePage />} />
           <Route path="universities" element={<UniversitiesListPage />} />
@@ -46,6 +48,7 @@ export default function App() {
           <Route path="apply" element={<ApplicationPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
         </Route>
       </Routes>
     </div>

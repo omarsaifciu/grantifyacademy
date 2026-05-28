@@ -17,7 +17,7 @@ const ForgotPasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await requestPasswordReset(email);
+    const result = await requestPasswordReset(email, locale);
     if (result.success) {
       toast({ title: 'تم إرسال البريد الإلكتروني', description: result.message });
       navigate(`/${locale}/login`);
@@ -62,6 +62,7 @@ const ForgotPasswordPage = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pr-12"
                     placeholder="you@example.com"
+                    autoComplete="email"
                     required
                   />
                 </div>
