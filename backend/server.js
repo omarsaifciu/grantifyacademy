@@ -190,7 +190,7 @@ const startServer = async () => {
       }
     };
     
-    // API routes
+    // API routes - Universities
     app.get('/api/universities', async (req, res) => {
       try {
         const cached = await getCache(CACHE_KEYS.UNIVERSITIES);
@@ -234,8 +234,7 @@ const startServer = async () => {
 
     app.post('/api/universities', async (req, res) => {
       try {
-        const allow = ((u) => ({ name: u.name, location: u.location, students: u.students, image: u.image, description: u.description, programs: u.programs }));
-        const { data } = await supabase.from('universities').insert(allow(req.body)).select().single();
+        const { data } = await supabase.from('universities').insert(req.body).select().single();
         
         await deleteCache(CACHE_KEYS.UNIVERSITIES);
         res.json(data);
@@ -247,8 +246,7 @@ const startServer = async () => {
 
     app.put('/api/universities/:id', async (req, res) => {
       try {
-        const allow = ((u) => ({ name: u.name, location: u.location, students: u.students, image: u.image, description: u.description, programs: u.programs }));
-        const { data } = await supabase.from('universities').update(allow(req.body)).eq('id', req.params.id).select().single();
+        const { data } = await supabase.from('universities').update(req.body).eq('id', req.params.id).select().single();
         
         await deleteCache(CACHE_KEYS.UNIVERSITIES);
         await deleteCache(CACHE_KEYS.UNIVERSITY(req.params.id));
@@ -269,6 +267,221 @@ const startServer = async () => {
       } catch (error) {
         console.error('❌ Error deleting university:', error);
         res.status(500).json({ error: 'Failed to delete university' });
+      }
+    });
+
+    // API routes - Application Intakes
+    app.get('/api/application-intakes/:universityId', async (req, res) => {
+      try {
+        const { data } = await supabase.from('application_intakes').select('*').eq('university_id', req.params.universityId);
+        res.json(data ?? []);
+      } catch (error) {
+        console.error('❌ Error fetching application intakes:', error);
+        res.status(500).json({ error: 'Failed to fetch application intakes' });
+      }
+    });
+
+    app.post('/api/application-intakes', async (req, res) => {
+      try {
+        const payload = {
+          ...req.body,
+          expected_admission_result_date: req.body.expected_admission_result_date || null,
+          semester_start_date: req.body.semester_start_date || null
+        };
+        const { data } = await supabase.from('application_intakes').insert(payload).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error creating application intake:', error);
+        res.status(500).json({ error: 'Failed to create application intake' });
+      }
+    });
+
+    app.put('/api/application-intakes/:id', async (req, res) => {
+      try {
+        const payload = {
+          ...req.body,
+          expected_admission_result_date: req.body.expected_admission_result_date || null,
+          semester_start_date: req.body.semester_start_date || null
+        };
+        const { data } = await supabase.from('application_intakes').update(payload).eq('id', req.params.id).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error updating application intake:', error);
+        res.status(500).json({ error: 'Failed to update application intake' });
+      }
+    });
+
+    app.delete('/api/application-intakes/:id', async (req, res) => {
+      try {
+        await supabase.from('application_intakes').delete().eq('id', req.params.id);
+        res.status(204).send();
+      } catch (error) {
+        console.error('❌ Error deleting application intake:', error);
+        res.status(500).json({ error: 'Failed to delete application intake' });
+      }
+    });
+
+    // API routes - Programs
+    app.get('/api/programs/:universityId', async (req, res) => {
+      try {
+        const { data } = await supabase.from('programs').select('*').eq('university_id', req.params.universityId);
+        res.json(data ?? []);
+      } catch (error) {
+        console.error('❌ Error fetching programs:', error);
+        res.status(500).json({ error: 'Failed to fetch programs' });
+      }
+    });
+
+    app.post('/api/programs', async (req, res) => {
+      try {
+        const { data } = await supabase.from('programs').insert(req.body).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error creating program:', error);
+        res.status(500).json({ error: 'Failed to create program' });
+      }
+    });
+
+    app.put('/api/programs/:id', async (req, res) => {
+      try {
+        const { data } = await supabase.from('programs').update(req.body).eq('id', req.params.id).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error updating program:', error);
+        res.status(500).json({ error: 'Failed to update program' });
+      }
+    });
+
+    app.delete('/api/programs/:id', async (req, res) => {
+      try {
+        await supabase.from('programs').delete().eq('id', req.params.id);
+        res.status(204).send();
+      } catch (error) {
+        console.error('❌ Error deleting program:', error);
+        res.status(500).json({ error: 'Failed to delete program' });
+      }
+    });
+
+    // API routes - Required Documents
+    app.get('/api/required-documents/:universityId', async (req, res) => {
+      try {
+        const { data } = await supabase.from('required_documents').select('*').eq('university_id', req.params.universityId);
+        res.json(data ?? []);
+      } catch (error) {
+        console.error('❌ Error fetching required documents:', error);
+        res.status(500).json({ error: 'Failed to fetch required documents' });
+      }
+    });
+
+    app.post('/api/required-documents', async (req, res) => {
+      try {
+        const { data } = await supabase.from('required_documents').insert(req.body).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error creating required document:', error);
+        res.status(500).json({ error: 'Failed to create required document' });
+      }
+    });
+
+    app.put('/api/required-documents/:id', async (req, res) => {
+      try {
+        const { data } = await supabase.from('required_documents').update(req.body).eq('id', req.params.id).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error updating required document:', error);
+        res.status(500).json({ error: 'Failed to update required document' });
+      }
+    });
+
+    app.delete('/api/required-documents/:id', async (req, res) => {
+      try {
+        await supabase.from('required_documents').delete().eq('id', req.params.id);
+        res.status(204).send();
+      } catch (error) {
+        console.error('❌ Error deleting required document:', error);
+        res.status(500).json({ error: 'Failed to delete required document' });
+      }
+    });
+
+    // API routes - Program Required Documents
+    app.get('/api/program-required-documents/:programId', async (req, res) => {
+      try {
+        const { data } = await supabase.from('program_required_documents').select('*').eq('program_id', req.params.programId);
+        res.json(data ?? []);
+      } catch (error) {
+        console.error('❌ Error fetching program required documents:', error);
+        res.status(500).json({ error: 'Failed to fetch program required documents' });
+      }
+    });
+
+    app.post('/api/program-required-documents', async (req, res) => {
+      try {
+        const { data } = await supabase.from('program_required_documents').insert(req.body).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error creating program required document:', error);
+        res.status(500).json({ error: 'Failed to create program required document' });
+      }
+    });
+
+    app.put('/api/program-required-documents/:id', async (req, res) => {
+      try {
+        const { data } = await supabase.from('program_required_documents').update(req.body).eq('id', req.params.id).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error updating program required document:', error);
+        res.status(500).json({ error: 'Failed to update program required document' });
+      }
+    });
+
+    app.delete('/api/program-required-documents/:id', async (req, res) => {
+      try {
+        await supabase.from('program_required_documents').delete().eq('id', req.params.id);
+        res.status(204).send();
+      } catch (error) {
+        console.error('❌ Error deleting program required document:', error);
+        res.status(500).json({ error: 'Failed to delete program required document' });
+      }
+    });
+
+    // API routes - Nationality Requirements
+    app.get('/api/nationality-requirements', async (req, res) => {
+      try {
+        const { data } = await supabase.from('nationality_requirements').select('*');
+        res.json(data ?? []);
+      } catch (error) {
+        console.error('❌ Error fetching nationality requirements:', error);
+        res.status(500).json({ error: 'Failed to fetch nationality requirements' });
+      }
+    });
+
+    app.post('/api/nationality-requirements', async (req, res) => {
+      try {
+        const { data } = await supabase.from('nationality_requirements').insert(req.body).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error creating nationality requirement:', error);
+        res.status(500).json({ error: 'Failed to create nationality requirement' });
+      }
+    });
+
+    app.put('/api/nationality-requirements/:id', async (req, res) => {
+      try {
+        const { data } = await supabase.from('nationality_requirements').update(req.body).eq('id', req.params.id).select().single();
+        res.json(data);
+      } catch (error) {
+        console.error('❌ Error updating nationality requirement:', error);
+        res.status(500).json({ error: 'Failed to update nationality requirement' });
+      }
+    });
+
+    app.delete('/api/nationality-requirements/:id', async (req, res) => {
+      try {
+        await supabase.from('nationality_requirements').delete().eq('id', req.params.id);
+        res.status(204).send();
+      } catch (error) {
+        console.error('❌ Error deleting nationality requirement:', error);
+        res.status(500).json({ error: 'Failed to delete nationality requirement' });
       }
     });
 
@@ -315,7 +528,7 @@ const startServer = async () => {
 
     app.post('/api/scholarships', async (req, res) => {
       try {
-        const allow = ((s) => ({ title: s.title, type: s.type, university: s.university, value: s.value, deadline: s.deadline, image: s.image, description: s.description, requirements: s.requirements }));
+        const allow = ((s) => ({ title: s.title, type: s.type, university: s.university, value: s.value, deadline: s.deadline || null, image: s.image, description: s.description, requirements: s.requirements }));
         const { data } = await supabase.from('scholarships').insert(allow(req.body)).select().single();
         
         await deleteCache(CACHE_KEYS.SCHOLARSHIPS);
@@ -328,7 +541,7 @@ const startServer = async () => {
 
     app.put('/api/scholarships/:id', async (req, res) => {
       try {
-        const allow = ((s) => ({ title: s.title, type: s.type, university: s.university, value: s.value, deadline: s.deadline, image: s.image, description: s.description, requirements: s.requirements }));
+        const allow = ((s) => ({ title: s.title, type: s.type, university: s.university, value: s.value, deadline: s.deadline || null, image: s.image, description: s.description, requirements: s.requirements }));
         const { data } = await supabase.from('scholarships').update(allow(req.body)).eq('id', req.params.id).select().single();
         
         await deleteCache(CACHE_KEYS.SCHOLARSHIPS);

@@ -4,13 +4,14 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import * as TabsComp from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, GraduationCap } from 'lucide-react';
+import { LogOut, GraduationCap, Search } from 'lucide-react';
 import { isAuthenticated, logout } from '@/lib/auth';
 import UniversitiesManager from '@/components/admin/UniversitiesManager';
 import ScholarshipsManager from '@/components/admin/ScholarshipsManager';
 import BlogManager from '@/components/admin/BlogManager';
 import UsersManager from '@/components/admin/UsersManager';
 import SettingsManager from '@/components/admin/SettingsManager';
+import SmartFilterPage from '@/components/admin/SmartFilterPage';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -68,9 +69,13 @@ const AdminDashboard = () => {
 
           <div className="glass-effect rounded-3xl p-6 md:p-8">
             <TabsComp.Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsComp.TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-8 bg-secondary/80">
+              <TabsComp.TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 mb-8 bg-secondary/80">
                 <TabsComp.TabsTrigger value="universities" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   الجامعات
+                </TabsComp.TabsTrigger>
+                <TabsComp.TabsTrigger value="smart-filter" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Search className="ml-1 w-4 h-4" />
+                  البحث الذكي
                 </TabsComp.TabsTrigger>
                 <TabsComp.TabsTrigger value="scholarships" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   المنح
@@ -88,6 +93,10 @@ const AdminDashboard = () => {
 
               <TabsComp.TabsContent value="universities">
                 <UniversitiesManager />
+              </TabsComp.TabsContent>
+
+              <TabsComp.TabsContent value="smart-filter">
+                <SmartFilterPage />
               </TabsComp.TabsContent>
 
               <TabsComp.TabsContent value="scholarships">
