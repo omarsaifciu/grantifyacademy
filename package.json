@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 3000",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 3000"
+    "preview": "vite preview --host 127.0.0.1 --port 3000",
+    "sitemap": "node scripts/generate-sitemap.js",
+    "postbuild": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "@mistralai/mistralai": "^2.2.5",

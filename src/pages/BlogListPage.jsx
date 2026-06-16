@@ -1,17 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { BlogGrid } from '@/components/BlogGrid';
 import { getBlogPosts, getDrafts } from '@/lib/storage';
-import { buildAlternateLinks } from '@/lib/utils';
-import { t } from '@/lib/i18n';
+import { SEOHead } from '@/components/seo';
 
 export default function BlogListPage() {
   const { locale } = useParams();
-  const location = useLocation();
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
@@ -24,20 +21,25 @@ export default function BlogListPage() {
     load();
   }, []);
 
+  const listingMeta = useMemo(() => ({
+    title: locale === 'ar' ? 'المدونة' : 'Blog',
+    name: locale === 'ar' ? 'المدونة' : 'Blog',
+    translations: {
+      [locale]: {
+        title: locale === 'ar' ? 'المدونة' : 'Blog',
+        description: locale === 'ar'
+          ? 'تابع أحدث المقالات والأخبار حول المنح الدراسية والجامعات ونصائح الدراسة بالخارج.'
+          : 'Follow the latest articles and news about scholarships, universities, and study abroad tips.',
+      },
+    },
+    is_active: true,
+  }), [locale]);
+
   return (
     <>
-      <Helmet>
-        <title>المدونة - منح دراسية</title>
-        <meta name="description" content="اقرأ أحدث المقالات والأخبار حول الدراسة والمنح" />
-        <link rel="canonical" href={`${window.location.origin}/${locale}${location.pathname.replace(`/${locale}`, '') || '/blog'}`} />
-        {buildAlternateLinks(location.pathname.replace(`/${locale}`, '').slice(1)).map((l) => (
-          <link key={l.hreflang} rel="alternate" hrefLang={l.hreflang} href={l.href} />
-        ))}
-      </Helmet>
-
+      <SEOHead page={listingMeta} lang={locale} pageType="listing" slug="blog" items={posts} currentPage={1} totalPages={1} />
       <div className="min-h-screen">
         <Navbar />
-
         <motion.section
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -46,13 +48,16 @@ export default function BlogListPage() {
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">{t(locale, 'blog_list_title')}</h1>
-              <p className="text-muted-foreground text-lg">{t(locale, 'blog_list_subtitle')}</p>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
+                {locale === 'ar' ? 'المدونة' : 'Blog'}
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                {locale === 'ar' ? 'آخر المقالات والأخبار' : 'Latest articles and news'}
+              </p>
             </div>
             <BlogGrid posts={posts} />
           </div>
         </motion.section>
-
         <Footer />
       </div>
     </>

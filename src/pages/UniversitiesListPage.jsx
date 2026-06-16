@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { UniversitiesCarousel } from '@/components/UniversitiesCarousel';
 import { getUniversities, getDrafts } from '@/lib/storage';
-import { buildAlternateLinks } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+import { SEOHead } from '@/components/seo';
 
 export default function UniversitiesListPage() {
   const { locale } = useParams();
-  const location = useLocation();
   const [universities, setUniversities] = useState([]);
 
   useEffect(() => {
@@ -24,20 +22,25 @@ export default function UniversitiesListPage() {
     load();
   }, []);
 
+  const listingMeta = useMemo(() => ({
+    title: locale === 'ar' ? 'الجامعات' : 'Universities',
+    name: locale === 'ar' ? 'الجامعات' : 'Universities',
+    translations: {
+      [locale]: {
+        title: locale === 'ar' ? 'الجامعات' : 'Universities',
+        description: locale === 'ar'
+          ? 'استكشف جميع الجامعات المتاحة. تعرف على البرامج الدراسية وشروط القبول.'
+          : 'Explore all available universities. Learn about academic programs and admission requirements.',
+      },
+    },
+    is_active: true,
+  }), [locale]);
+
   return (
     <>
-      <Helmet>
-        <title>الجامعات - منح دراسية</title>
-        <meta name="description" content="استكشف جميع الجامعات المضافة" />
-        <link rel="canonical" href={`${window.location.origin}/${locale}${location.pathname.replace(`/${locale}`, '') || '/universities'}`} />
-        {buildAlternateLinks(location.pathname.replace(`/${locale}`, '').slice(1)).map((l) => (
-          <link key={l.hreflang} rel="alternate" hrefLang={l.hreflang} href={l.href} />
-        ))}
-      </Helmet>
-
+      <SEOHead page={listingMeta} lang={locale} pageType="listing" slug="universities" items={universities} currentPage={1} totalPages={1} />
       <div className="min-h-screen">
         <Navbar />
-
         <motion.section
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -46,13 +49,18 @@ export default function UniversitiesListPage() {
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">{t(locale, 'universities_list_title')}</h1>
-              <p className="text-muted-foreground text-lg">{t(locale, 'universities_list_subtitle')}</p>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
+                {locale === 'ar' ? 'الجامعات' : 'Universities'}
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                {locale === 'ar'
+                  ? 'استكشف جميع الجامعات المضافة'
+                  : 'Explore all featured universities'}
+              </p>
             </div>
             <UniversitiesCarousel universities={universities} />
           </div>
         </motion.section>
-
         <Footer />
       </div>
     </>

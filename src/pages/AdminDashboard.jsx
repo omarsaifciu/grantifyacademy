@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import * as TabsComp from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { LogOut, GraduationCap, Search } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { isAuthenticated, logout } from '@/lib/auth';
 import UniversitiesManager from '@/components/admin/UniversitiesManager';
 import ScholarshipsManager from '@/components/admin/ScholarshipsManager';
@@ -39,7 +41,8 @@ const AdminDashboard = () => {
         <meta name="description" content="لوحة تحكم الإدارة" />
       </Helmet>
 
-      <div className="min-h-screen p-4 md:p-8 bg-secondary/30">
+      <Navbar />
+      <div className="min-h-screen p-4 md:p-8 bg-secondary/30 pt-28">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,6 +121,7 @@ const AdminDashboard = () => {
           </div>
         </motion.div>
       </div>
+      <Footer />
     </>
   );
 };

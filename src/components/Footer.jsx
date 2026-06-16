@@ -5,6 +5,7 @@ import lightLogo from '@/assets/logo/lightmode.png';
 import darkLogo from '@/assets/logo/darkmode.png';
 import { t } from '@/lib/i18n';
 import { DEFAULT_LOCALE, isRtlLocale, cn } from '@/lib/utils';
+import LanguageSwitcher from '@/components/seo/LanguageSwitcher';
 
 export const Footer = () => {
   const { locale } = useParams();
@@ -92,6 +93,9 @@ export const Footer = () => {
                 <span>نيقوسيا</span>
               </li>
             </ul>
+          </div>
+          <div>
+            <LanguageSwitcher variant="footer" />
           </div>
         </div>
 

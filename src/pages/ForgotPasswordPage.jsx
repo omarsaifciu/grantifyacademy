@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { requestPasswordReset } from '@/lib/auth';
 
 const ForgotPasswordPage = () => {
@@ -33,7 +35,9 @@ const ForgotPasswordPage = () => {
         <meta name="description" content="استعادة كلمة المرور عبر البريد الإلكتروني" />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <Navbar />
+
+      <div className="min-h-screen flex items-center justify-center p-4 pt-28">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -77,6 +81,8 @@ const ForgotPasswordPage = () => {
           </div>
         </motion.div>
       </div>
+
+      <Footer />
     </>
   );
 };

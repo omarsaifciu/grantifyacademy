@@ -64,6 +64,13 @@ export function buildAlternateLinks(pathAfterLocale) {
   }));
 }
 
+export function getSiteUrl() {
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin
+  }
+  return import.meta.env.VITE_SITE_URL || 'https://grantifyacademy.com'
+}
+
 export const LOCALE_LABELS = {
   en: 'English',
   zh: '中文',

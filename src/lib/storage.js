@@ -1,5 +1,7 @@
 
 import supabase from './supabase'
+import { generateLocalizedSlug } from './seo/slug'
+import { DEFAULT_LOCALE } from './utils'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -17,6 +19,7 @@ const STORAGE_KEYS = {
   DRAFTS_BLOG: 'kktc_drafts_blog',
   DRAFTS_SCHOLARSHIPS: 'kktc_drafts_scholarships',
   DRAFTS_UNIVERSITIES: 'kktc_drafts_universities',
+  AI_SKILLS: 'kktc_ai_skills',
 }
 
 // Check if we should use backend API, Supabase directly, or localStorage
@@ -310,43 +313,49 @@ export const getUniversityById = async (id) => {
 }
 
 export const createUniversity = async (university) => {
+  const title = university.translations?.[DEFAULT_LOCALE]?.name || university.name || ''
+  const slug = university.slug || generateLocalizedSlug(title, DEFAULT_LOCALE)
+  const item = { ...university, slug }
   if (USE_LOCAL) {
     const list = await getUniversities()
-    const item = { id: Date.now().toString(), ...university }
-    const updated = [...list, item]
+    const stored = { id: Date.now().toString(), ...item }
+    const updated = [...list, stored]
     localStorage.setItem(STORAGE_KEYS.UNIVERSITIES, JSON.stringify(updated))
-    return item
+    return stored
   }
   if (USE_SUPABASE) {
     if (!supabase) throw new Error('Supabase not configured')
-    const { accreditations, ...cleanData } = university
+    const { accreditations, ...cleanData } = item
     const { data, error } = await supabase.from('universities').insert(cleanData).select().single()
     if (error) throw error
     return data
   }
   return apiCall('/universities', {
     method: 'POST',
-    body: JSON.stringify(university),
+    body: JSON.stringify(item),
   })
 }
 
 export const updateUniversity = async (id, university) => {
+  const title = university.translations?.[DEFAULT_LOCALE]?.name || university.name || ''
+  const slug = university.slug || generateLocalizedSlug(title, DEFAULT_LOCALE)
+  const item = { ...university, slug }
   if (USE_LOCAL) {
     const list = await getUniversities()
-    const updated = list.map(u => (u.id === id ? { ...u, ...university } : u))
+    const updated = list.map(u => (u.id === id ? { ...u, ...item } : u))
     localStorage.setItem(STORAGE_KEYS.UNIVERSITIES, JSON.stringify(updated))
     return updated.find(u => u.id === id) ?? null
   }
   if (USE_SUPABASE) {
     if (!supabase) throw new Error('Supabase not configured')
-    const { accreditations, ...cleanData } = university
+    const { accreditations, ...cleanData } = item
     const { data, error } = await supabase.from('universities').update(cleanData).eq('id', id).select().single()
     if (error) throw error
     return data
   }
   return apiCall(`/universities/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(university),
+    body: JSON.stringify(item),
   })
 }
 
@@ -843,9 +852,11 @@ export const getScholarshipById = async (id) => {
 }
 
 export const createScholarship = async (scholarship) => {
+  const title = scholarship.translations?.[DEFAULT_LOCALE]?.title || scholarship.title || ''
+  const slug = scholarship.slug || generateLocalizedSlug(title, DEFAULT_LOCALE)
   if (USE_LOCAL) {
     const list = await getScholarships()
-    const item = { id: Date.now().toString(), ...scholarship }
+    const item = { id: Date.now().toString(), ...scholarship, slug }
     const updated = [...list, item]
     localStorage.setItem(STORAGE_KEYS.SCHOLARSHIPS, JSON.stringify(updated))
     return item
@@ -854,6 +865,7 @@ export const createScholarship = async (scholarship) => {
     if (!supabase) throw new Error('Supabase not configured')
     const cleanedScholarship = {
       ...scholarship,
+      slug,
       deadline: scholarship.deadline || null
     }
     const { data, error } = await supabase.from('scholarships').insert(cleanedScholarship).select().single()
@@ -862,6 +874,7 @@ export const createScholarship = async (scholarship) => {
   }
   const cleanedScholarship = {
     ...scholarship,
+    slug,
     deadline: scholarship.deadline || null
   }
   return apiCall('/scholarships', {
@@ -871,9 +884,11 @@ export const createScholarship = async (scholarship) => {
 }
 
 export const updateScholarship = async (id, scholarship) => {
+  const title = scholarship.translations?.[DEFAULT_LOCALE]?.title || scholarship.title || ''
+  const slug = scholarship.slug || generateLocalizedSlug(title, DEFAULT_LOCALE)
   if (USE_LOCAL) {
     const list = await getScholarships()
-    const updated = list.map(s => (s.id === id ? { ...s, ...scholarship } : s))
+    const updated = list.map(s => (s.id === id ? { ...s, ...scholarship, slug } : s))
     localStorage.setItem(STORAGE_KEYS.SCHOLARSHIPS, JSON.stringify(updated))
     return updated.find(s => s.id === id) ?? null
   }
@@ -881,6 +896,7 @@ export const updateScholarship = async (id, scholarship) => {
     if (!supabase) throw new Error('Supabase not configured')
     const cleanedScholarship = {
       ...scholarship,
+      slug,
       deadline: scholarship.deadline || null
     }
     const { data, error } = await supabase.from('scholarships').update(cleanedScholarship).eq('id', id).select().single()
@@ -889,6 +905,7 @@ export const updateScholarship = async (id, scholarship) => {
   }
   const cleanedScholarship = {
     ...scholarship,
+    slug,
     deadline: scholarship.deadline || null
   }
   return apiCall(`/scholarships/${id}`, {
@@ -942,41 +959,45 @@ export const getBlogPostById = async (id) => {
 }
 
 export const createBlogPost = async (post) => {
+  const title = post.translations?.[DEFAULT_LOCALE]?.title || post.title || ''
+  const slug = post.slug || generateLocalizedSlug(title, DEFAULT_LOCALE)
   if (USE_LOCAL) {
     const list = await getBlogPosts()
-    const item = { id: Date.now().toString(), ...post }
+    const item = { id: Date.now().toString(), ...post, slug }
     const updated = [...list, item]
     localStorage.setItem(STORAGE_KEYS.BLOG_POSTS, JSON.stringify(updated))
     return item
   }
   if (USE_SUPABASE) {
     if (!supabase) throw new Error('Supabase not configured')
-    const { data, error } = await supabase.from('blog_posts').insert(post).select().single()
+    const { data, error } = await supabase.from('blog_posts').insert({ ...post, slug }).select().single()
     if (error) throw error
     return data
   }
   return apiCall('/blog-posts', {
     method: 'POST',
-    body: JSON.stringify(post),
+    body: JSON.stringify({ ...post, slug }),
   })
 }
 
 export const updateBlogPost = async (id, post) => {
+  const title = post.translations?.[DEFAULT_LOCALE]?.title || post.title || ''
+  const slug = post.slug || generateLocalizedSlug(title, DEFAULT_LOCALE)
   if (USE_LOCAL) {
     const list = await getBlogPosts()
-    const updated = list.map(p => (p.id === id ? { ...p, ...post } : p))
+    const updated = list.map(p => (p.id === id ? { ...p, ...post, slug } : p))
     localStorage.setItem(STORAGE_KEYS.BLOG_POSTS, JSON.stringify(updated))
     return updated.find(p => p.id === id) ?? null
   }
   if (USE_SUPABASE) {
     if (!supabase) throw new Error('Supabase not configured')
-    const { data, error } = await supabase.from('blog_posts').update(post).eq('id', id).select().single()
+    const { data, error } = await supabase.from('blog_posts').update({ ...post, slug }).eq('id', id).select().single()
     if (error) throw error
     return data
   }
   return apiCall(`/blog-posts/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(post),
+    body: JSON.stringify({ ...post, slug }),
   })
 }
 
@@ -1090,6 +1111,19 @@ export const updateSettings = async (updates) => {
   return data
 }
 
+// ============================================================
+// AI SKILLS (use localStorage always — reliable across sessions)
+// ============================================================
+export const getAiSkills = async () => {
+  const data = localStorage.getItem(STORAGE_KEYS.AI_SKILLS)
+  return data ? JSON.parse(data) : []
+}
+
+export const updateAiSkills = async (skills) => {
+  localStorage.setItem(STORAGE_KEYS.AI_SKILLS, JSON.stringify(skills))
+  return skills
+}
+
 export default {
   getUniversities,
   getUniversityById,
@@ -1130,6 +1164,8 @@ export default {
   deleteUser,
   getSettings,
   updateSettings,
+  getAiSkills,
+  updateAiSkills,
   uploadImage,
   computeIntakeStatus,
 }

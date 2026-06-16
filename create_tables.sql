@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS scholarships CASCADE;
 DROP TABLE IF EXISTS blog_posts CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS settings CASCADE;
+DROP TABLE IF EXISTS ai_skills CASCADE;
 DROP TABLE IF EXISTS universities CASCADE;
 
 -- Create universities table
@@ -150,6 +151,13 @@ CREATE TABLE settings (
   hero_background_image TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create ai_skills table (persistent AI instructions)
+CREATE TABLE ai_skills (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  skill TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Insert sample data for required_documents (uses university IDs from the sample universities above)

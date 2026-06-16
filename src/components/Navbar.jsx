@@ -1,22 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Menu, X, Languages } from 'lucide-react';
+import { Menu, X, LogIn, LayoutDashboard } from 'lucide-react';
 import lightLogo from '@/assets/logo-header/logo light mode header.png';
 import darkLogo from '@/assets/logo-header/logo dark mode header.png';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
-import { SUPPORTED_LOCALES, LOCALE_LABELS, DEFAULT_LOCALE, isRtlLocale, cn } from '@/lib/utils';
+import { DEFAULT_LOCALE, isRtlLocale, cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { isAuthenticated, getCurrentUser } from '@/lib/auth';
+import LanguageSwitcher from '@/components/seo/LanguageSwitcher';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
   const { locale } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const currentLocale = locale || DEFAULT_LOCALE;
   const rtl = isRtlLocale(currentLocale);
+
+  useEffect(() => {
+    (async () => {
+      const authed = await isAuthenticated()
+      if (authed) {
+        const user = await getCurrentUser()
+        setAuthUser(user)
+      }
+    })()
+  }, [location])
 
   const changeLocale = (newLocale) => {
     const pathWithoutLocale = location.pathname.replace(/^\/[^/]+/, '') || '/';
@@ -54,33 +66,23 @@ export const Navbar = () => {
             <Link to={`/${currentLocale}/blog`} className="text-foreground hover:text-primary transition-colors font-semibold">
               {t(currentLocale, 'nav_blog')}
             </Link>
-            <ThemeToggle />
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" className="gap-2 text-foreground bg-background/20 hover:bg-background/30 backdrop-blur-sm border border-input">
-                  <Languages className="w-4 h-4" />
-                  {LOCALE_LABELS[currentLocale] || currentLocale}
+            {authUser ? (
+              <Link to={`/${currentLocale}/admin`}>
+                <Button variant="outline" className="gap-2">
+                  <LayoutDashboard className="w-4 h-4" />
+                  {t(currentLocale, 'nav_admin')}
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>{t(currentLocale, 'nav_choose_language')}</DialogTitle>
-                  <DialogDescription>{t(currentLocale, 'nav_choose_language_desc')}</DialogDescription>
-                </DialogHeader>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {SUPPORTED_LOCALES.map((loc) => (
-                    <Button
-                      key={loc}
-                      variant={loc === currentLocale ? 'default' : 'outline'}
-                      className="justify-center"
-                      onClick={() => changeLocale(loc)}
-                    >
-                      {LOCALE_LABELS[loc] || loc}
-                    </Button>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
+              </Link>
+            ) : (
+              <Link to={`/${currentLocale}/login`}>
+                <Button variant="outline" className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  {t(currentLocale, 'nav_login')}
+                </Button>
+              </Link>
+            )}
+            <ThemeToggle />
+            <LanguageSwitcher variant="button" />
             <Link to={`/${currentLocale}/apply`}>
               <Button>
                 {t(currentLocale, 'nav_apply_now')}
@@ -116,6 +118,21 @@ export const Navbar = () => {
               <Link to={`/${currentLocale}/blog`} className="text-foreground hover:text-primary transition-colors font-semibold">
                 {t(currentLocale, 'nav_blog')}
               </Link>
+              {authUser ? (
+                <Link to={`/${currentLocale}/admin`}>
+                  <Button variant="outline" className="w-full gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    {t(currentLocale, 'nav_admin')}
+                  </Button>
+                </Link>
+              ) : (
+                <Link to={`/${currentLocale}/login`}>
+                  <Button variant="outline" className="w-full gap-2">
+                    <LogIn className="w-4 h-4" />
+                    {t(currentLocale, 'nav_login')}
+                  </Button>
+                </Link>
+              )}
               <div className="flex items-center justify-between">
                 <Link to={`/${currentLocale}/apply`} className="flex-1">
                     <Button className="w-full">
@@ -123,32 +140,7 @@ export const Navbar = () => {
                     </Button>
                 </Link>
                 <ThemeToggle />
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" className={cn(rtl ? 'mr-2' : 'ml-2', 'gap-2 text-foreground bg-background/20 hover:bg-background/30 backdrop-blur-sm border border-input')}>
-                      <Languages className="w-4 h-4" />
-                      {LOCALE_LABELS[currentLocale] || currentLocale}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>{t(currentLocale, 'nav_choose_language')}</DialogTitle>
-                  <DialogDescription>{t(currentLocale, 'nav_choose_language_desc')}</DialogDescription>
-                </DialogHeader>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {SUPPORTED_LOCALES.map((loc) => (
-                        <Button
-                          key={loc}
-                          variant={loc === currentLocale ? 'default' : 'outline'}
-                          className="justify-center"
-                          onClick={() => changeLocale(loc)}
-                        >
-                          {LOCALE_LABELS[loc] || loc}
-                        </Button>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <LanguageSwitcher />
               </div>
             </div>
           </motion.div>

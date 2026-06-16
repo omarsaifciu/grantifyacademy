@@ -1,0 +1,26 @@
+# Grantify Academy - Robots.txt
+# Generated: 2026-06-16
+
+User-agent: *
+Allow: /
+
+# Block low-value parameter URLs
+Disallow: /*?sort=
+Disallow: /*?page=
+Disallow: /*?ref=
+Disallow: /*?utm_source=
+Disallow: /*?utm_medium=
+Disallow: /*?utm_campaign=
+Disallow: /*?fbclid=
+Disallow: /*?gclid=
+
+# Block admin and auth pages
+Disallow: /admin
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Block draft/preview URLs
+Disallow: /*draft=true
+
+Sitemap: https://grantifyacademy.com/sitemap.xml

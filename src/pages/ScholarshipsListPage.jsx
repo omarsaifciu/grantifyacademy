@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ScholarshipsGrid } from '@/components/ScholarshipsGrid';
 import storage, { getScholarships, getDrafts } from '@/lib/storage';
-import { buildAlternateLinks } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+import { SEOHead } from '@/components/seo';
+import { generateLocalizedSlug } from '@/lib/seo/slug';
 
 export default function ScholarshipsListPage() {
   const { locale } = useParams();
-  const location = useLocation();
   const [scholarships, setScholarships] = useState([]);
 
   useEffect(() => {
@@ -24,20 +23,25 @@ export default function ScholarshipsListPage() {
     load();
   }, []);
 
+  const listingMeta = useMemo(() => ({
+    title: locale === 'ar' ? 'المنح الدراسية' : 'Scholarships',
+    name: locale === 'ar' ? 'المنح الدراسية' : 'Scholarships',
+    translations: {
+      [locale]: {
+        title: locale === 'ar' ? 'المنح الدراسية' : 'Scholarships',
+        description: locale === 'ar'
+          ? 'استكشف جميع المنح الدراسية المتاحة للطلاب. تصفح وقدم على أفضل الفرص التعليمية.'
+          : 'Explore all available scholarships for students. Browse and apply for the best educational opportunities.',
+      },
+    },
+    is_active: true,
+  }), [locale]);
+
   return (
     <>
-      <Helmet>
-        <title>المنح الدراسية - منح دراسية</title>
-        <meta name="description" content="استكشف جميع المنح الدراسية المتاحة للطلاب" />
-        <link rel="canonical" href={`${window.location.origin}/${locale}${location.pathname.replace(`/${locale}`, '') || '/scholarships'}`} />
-        {buildAlternateLinks(location.pathname.replace(`/${locale}`, '').slice(1)).map((l) => (
-          <link key={l.hreflang} rel="alternate" hrefLang={l.hreflang} href={l.href} />
-        ))}
-      </Helmet>
-
+      <SEOHead page={listingMeta} lang={locale} pageType="listing" slug="scholarships" items={scholarships} currentPage={1} totalPages={1} />
       <div className="min-h-screen">
         <Navbar />
-
         <motion.section
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -46,13 +50,18 @@ export default function ScholarshipsListPage() {
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">{t(locale, 'scholarships_list_title')}</h1>
-              <p className="text-muted-foreground text-lg">{t(locale, 'scholarships_list_subtitle')}</p>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
+                {locale === 'ar' ? 'المنح الدراسية' : 'Scholarships'}
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                {locale === 'ar'
+                  ? 'استكشف جميع المنح الدراسية المتاحة للطلاب'
+                  : 'Explore all available scholarships for students'}
+              </p>
             </div>
             <ScholarshipsGrid scholarships={scholarships} />
           </div>
         </motion.section>
-
         <Footer />
       </div>
     </>
