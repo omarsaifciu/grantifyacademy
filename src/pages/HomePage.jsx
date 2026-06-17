@@ -33,15 +33,12 @@ const HomePage = () => {
         getDrafts('scholarship'),
         getDrafts('blog'),
       ]);
-      const uPubIds = new Set(u.map(x => x.id));
-      const sPubIds = new Set(s.map(x => x.id));
-      const bPubIds = new Set(b.map(x => x.id));
-      const uDraftIds = new Set((du || []).map((d) => d.id));
-      const sDraftIds = new Set((ds || []).map((d) => d.id));
-      const bDraftIds = new Set((db || []).map((d) => d.id));
-      setUniversities(u.filter((x) => !uDraftIds.has(x.id) || uPubIds.has(x.id)));
-      setScholarships(s.filter((x) => !sDraftIds.has(x.id) || sPubIds.has(x.id)));
-      setBlogPosts(b.filter((x) => !bDraftIds.has(x.id) || bPubIds.has(x.id)));
+      const uIds = new Set((du || []).map((d) => d.id));
+      const sIds = new Set((ds || []).map((d) => d.id));
+      const bIds = new Set((db || []).map((d) => d.id));
+      setUniversities(u.filter((x) => !uIds.has(x.id)));
+      setScholarships(s.filter((x) => !sIds.has(x.id)));
+      setBlogPosts(b.filter((x) => !bIds.has(x.id)));
       setSettings(st || {});
     };
     load();

@@ -10,6 +10,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/utils';
 import { getBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, uploadImage, getDrafts, saveDraft, deleteDraft } from '@/lib/storage';
 import { validatePageBeforePublish } from '@/lib/seo/heading';
+import { generateAutoSEODescription } from '@/lib/seo/metadata'
+import FocusKeywordsInput from '@/components/admin/FocusKeywordsInput'
+import SEOAnalyzer from '@/components/seo/SEOAnalyzer'
 
 const deserializeHtmlToBlocks = (html, transl) => {
   try {
@@ -203,7 +206,6 @@ const BlogManager = () => {
 
     if (editingPost) {
       await updateBlogPost(editingPost.id, payload)
-      await deleteDraft('blog', editingPost.id)
       toast({ title: "تم تحديث المقالة بنجاح!" })
     } else {
       await createBlogPost(payload)
@@ -308,17 +310,29 @@ const BlogManager = () => {
                           placeholder={`المقتطف (${loc})`}
                         />
                       </div>
-                    <div className="md:col-span-2">
-                      <Label>وصف SEO المُنشأ تلقائياً ({loc})</Label>
-                      <div className="text-sm text-muted-foreground bg-secondary/30 p-2 rounded min-h-[40px]">
-                        {translations[loc]?.excerpt || 'الوصف التلقائي سيتم إنشاؤه من المحتوى'}
+                      <div className="md:col-span-2">
+                        <Label>وصف SEO المُنشأ تلقائياً ({loc})</Label>
+                        <div className="text-sm text-muted-foreground bg-secondary/30 p-2 rounded min-h-[40px]">
+                          {generateAutoSEODescription(translations[loc]?.excerpt || translations[loc]?.title || '', loc, 155)}
+                        </div>
                       </div>
-                    </div>
+                      <div className="md:col-span-2">
+                        <Label>الكلمات المفتاحية (Focus Keywords) ({loc})</Label>
+                        <FocusKeywordsInput translations={translations} locale={loc} onChange={setTranslations} />
+                      </div>
                     </div>
                   </TabsContent>
                 ))}
-            </Tabs>
-          </div>
+                    </Tabs>
+            </div>
+            <div className="mt-4">
+              <SEOAnalyzer
+                keywords={translations[activeLocale]?.focus_keywords || []}
+                title={(translations[activeLocale]?.title || '') + ' | Grantify Academy'}
+                description={translations[activeLocale]?.excerpt || translations[activeLocale]?.title || ''}
+                lang={activeLocale}
+              />
+            </div>
           <div className="flex justify-end">
             <Button type="button" variant="outline" onClick={() => setShowPreview((v)=>!v)}>{showPreview ? 'إخفاء المعاينة' : 'معاينة'}</Button>
           </div>
@@ -444,7 +458,7 @@ const BlogManager = () => {
               <Button type="submit" className="flex-1" disabled={uploading}>
                 {editingPost ? 'تحديث' : 'إضافة'}
               </Button>
-              <Button type="button" variant="outline" className="flex-1" onClick={async () => { if (editingPost?.id) await deleteDraft('blog', editingPost.id); setEditingPost(null); setShowForm(false); }}>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => { setEditingPost(null); setShowForm(false); }}>
                 إلغاء
               </Button>
               <Button type="button" variant="secondary" onClick={async () => {

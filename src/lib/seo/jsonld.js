@@ -1,4 +1,4 @@
-import { getBCP47Locale } from './metadata'
+import { getBCP47Locale, truncateTo } from './metadata'
 import { getLocalizedCategorySlug } from './slug'
 
 function getLocalizedText(item, lang, field) {
@@ -13,14 +13,45 @@ function getSiteUrl() {
   return import.meta.env.VITE_SITE_URL || 'https://grantifyacademy.com'
 }
 
+const BREADCRUMB_LABELS = {
+  home: {
+    ar: 'الرئيسية', en: 'Home', zh: '首页', es: 'Inicio', hi: 'होम',
+    fr: 'Accueil', bn: 'হোম', pt: 'Início', ru: 'Главная', ja: 'ホーム',
+    de: 'Startseite', ko: '홈', tr: 'Ana Sayfa', vi: 'Trang chủ',
+    it: 'Home', th: 'หน้าแรก', fa: 'خانه', sw: 'Nyumbani', id: 'Beranda', nl: 'Home',
+  },
+  scholarships: {
+    ar: 'المنح الدراسية', en: 'Scholarships', zh: '奖学金', es: 'Becas', hi: 'छात्रवृत्तियां',
+    fr: 'Bourses', bn: 'স্কলারশিপ', pt: 'Bolsas de Estudo', ru: 'Стипендии', ja: '奨学金',
+    de: 'Stipendien', ko: '장학금', tr: 'Burslar', vi: 'Học bổng',
+    it: 'Borse di Studio', th: 'ทุนการศึกษา', fa: 'بورسیه‌ها', sw: 'Masomo', id: 'Beasiswa', nl: 'Beurzen',
+  },
+  universities: {
+    ar: 'الجامعات', en: 'Universities', zh: '大学', es: 'Universidades', hi: 'विश्वविद्यालय',
+    fr: 'Universités', bn: 'বিশ্ববিদ্যালয়', pt: 'Universidades', ru: 'Университеты', ja: '大学',
+    de: 'Universitäten', ko: '대학', tr: 'Üniversiteler', vi: 'Trường đại học',
+    it: 'Università', th: 'มหาวิทยาลัย', fa: 'دانشگاه‌ها', sw: 'Vyuo Vikuu', id: 'Universitas', nl: 'Universiteiten',
+  },
+  blog: {
+    ar: 'المدونة', en: 'Blog', zh: '博客', es: 'Blog', hi: 'ब्लॉग',
+    fr: 'Blog', bn: 'ব্লগ', pt: 'Blog', ru: 'Блог', ja: 'ブログ',
+    de: 'Blog', ko: '블로그', tr: 'Blog', vi: 'Blog',
+    it: 'Blog', th: 'บล็อก', fa: 'وبلاگ', sw: 'Blogu', id: 'Blog', nl: 'Blog',
+  },
+}
+
+function getBreadcrumbLabel(category, lang) {
+  return BREADCRUMB_LABELS[category]?.[lang] || BREADCRUMB_LABELS[category]?.en || category
+}
+
 export function generateScholarshipSchema(scholarship, lang, slug) {
   const siteUrl = getSiteUrl()
   const canonical = `${siteUrl}/${lang}/scholarships/${slug}`
 
   const name = getLocalizedText(scholarship, lang, 'title') || scholarship.title
-  const description = getLocalizedText(scholarship, lang, 'description')
+  const description = truncateTo(getLocalizedText(scholarship, lang, 'description')
     || getLocalizedText(scholarship, lang, 'seoDescription')
-    || ''
+    || '', 200)
 
   const amount = scholarship.value || ''
   const currency = scholarship.currency || 'USD'
@@ -64,8 +95,8 @@ export function generateScholarshipSchema(scholarship, lang, slug) {
         breadcrumb: {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
-            { '@type': 'ListItem', position: 2, name: 'Scholarships', item: categoryUrl },
+            { '@type': 'ListItem', position: 1, name: getBreadcrumbLabel('home', lang), item: homeUrl },
+            { '@type': 'ListItem', position: 2, name: getBreadcrumbLabel('scholarships', lang), item: categoryUrl },
             { '@type': 'ListItem', position: 3, name, item: canonical },
           ],
         },
@@ -79,7 +110,7 @@ export function generateUniversitySchema(university, lang, slug) {
   const canonical = `${siteUrl}/${lang}/universities/${slug}`
 
   const name = getLocalizedText(university, lang, 'name') || university.name
-  const description = getLocalizedText(university, lang, 'description') || ''
+  const description = truncateTo(getLocalizedText(university, lang, 'description') || '', 200)
 
   const categorySlug = getLocalizedCategorySlug('universities', lang)
   const homeUrl = `${siteUrl}/${lang}/`
@@ -106,8 +137,8 @@ export function generateUniversitySchema(university, lang, slug) {
         breadcrumb: {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
-            { '@type': 'ListItem', position: 2, name: 'Universities', item: categoryUrl },
+            { '@type': 'ListItem', position: 1, name: getBreadcrumbLabel('home', lang), item: homeUrl },
+            { '@type': 'ListItem', position: 2, name: getBreadcrumbLabel('universities', lang), item: categoryUrl },
             { '@type': 'ListItem', position: 3, name, item: canonical },
           ],
         },
@@ -121,7 +152,7 @@ export function generateProgramSchema(program, lang, slug) {
   const canonical = `${siteUrl}/${lang}/programs/${slug}`
 
   const name = program.program_name || program.name || ''
-  const description = program.description || ''
+  const description = truncateTo(program.description || '', 200)
 
   const homeUrl = `${siteUrl}/${lang}/`
 
@@ -152,7 +183,7 @@ export function generateProgramSchema(program, lang, slug) {
         breadcrumb: {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
+            { '@type': 'ListItem', position: 1, name: getBreadcrumbLabel('home', lang), item: homeUrl },
             { '@type': 'ListItem', position: 2, name, item: canonical },
           ],
         },
@@ -193,7 +224,7 @@ export function generateListingSchema(pageType, lang, pageName, items = []) {
         breadcrumb: {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
+            { '@type': 'ListItem', position: 1, name: getBreadcrumbLabel('home', lang), item: homeUrl },
             { '@type': 'ListItem', position: 2, name: pageName, item: canonical },
           ],
         },
@@ -207,7 +238,7 @@ export function generateBlogPostSchema(post, lang, slug) {
   const canonical = `${siteUrl}/${lang}/blog/${slug}`
 
   const name = getLocalizedText(post, lang, 'title') || post.title
-  const description = getLocalizedText(post, lang, 'excerpt') || ''
+  const description = truncateTo(getLocalizedText(post, lang, 'excerpt') || '', 200)
   const authorName = post.author || 'Grantify Academy'
 
   const categorySlug = getLocalizedCategorySlug('blog', lang)
@@ -242,8 +273,8 @@ export function generateBlogPostSchema(post, lang, slug) {
         breadcrumb: {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
-            { '@type': 'ListItem', position: 2, name: 'Blog', item: categoryUrl },
+            { '@type': 'ListItem', position: 1, name: getBreadcrumbLabel('home', lang), item: homeUrl },
+            { '@type': 'ListItem', position: 2, name: getBreadcrumbLabel('blog', lang), item: categoryUrl },
             { '@type': 'ListItem', position: 3, name, item: canonical },
           ],
         },
@@ -283,5 +314,79 @@ export function generateSchemaByType(page, lang, slug, pageType) {
     case 'listing':
     default:
       return null
+  }
+}
+
+export function validateJSONLDSchema(schema, lang) {
+  const errors = []
+  
+  if (!schema) {
+    errors.push('Schema is null or undefined')
+    return { valid: false, errors }
+  }
+  
+  if (!schema['@type']) {
+    errors.push('Missing @type in schema')
+  }
+  
+  if (!schema['@graph'] || !Array.isArray(schema['@graph'])) {
+    errors.push('Missing or invalid @graph array')
+  } else {
+    const webPageFound = schema['@graph'].some(item => item['@type'] === 'WebPage')
+    if (!webPageFound) {
+      errors.push('Missing WebPage schema in @graph')
+    }
+  }
+  
+  if (!schema['inLanguage']) {
+    errors.push('Missing inLanguage for WebPage')
+  }
+  
+  const name = schema.name || (schema['@graph'] && schema['@graph'].find(item => item['@type'] === 'WebPage')?.name)
+  if (!name || typeof name !== 'string') {
+    errors.push('Missing or invalid name')
+  } else if (name.length < 10) {
+    errors.push('Name is too short (should be at least 10 characters)')
+  } else if (name.length > 100) {
+    errors.push('Name is too long (should be at most 100 characters)')
+  }
+  
+  if (lang === 'ar' && !/[؀-ۿ]/.test(name)) {
+    errors.push('Arabic name should contain Arabic characters')
+  }
+  
+  if (schema.description && typeof schema.description === 'string') {
+    if (schema.description.length < 50) {
+      errors.push('Description is too short (should be at least 50 characters)')
+    }
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+    wordCount: name ? name.split(' ').length : 0,
+    language: lang,
+  }
+}
+
+export function validateAllSchemas(schemas, lang) {
+  const results = schemas.map(schema => {
+    const type = schema['@graph']?.[0]?.['@type'] || schema['@type']
+    return {
+      type,
+      ...validateJSONLDSchema(schema, lang),
+    }
+  })
+  
+  const allValid = results.every(r => r.valid)
+  const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0)
+  
+  return {
+    valid: allValid,
+    errors: results.flatMap(r => r.errors),
+    totalErrors,
+    schemas: results,
+    language: lang,
+    wordCount: results.reduce((sum, r) => sum + (r.wordCount || 0), 0),
   }
 }

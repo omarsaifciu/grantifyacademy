@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getUniversityById, updateUniversity, uploadImage, getDrafts, getUniversities } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
-import { SUPPORTED_LOCALES } from '@/lib/utils';
+import { getLocalizedCity, getLocalizedCountryLabel } from '@/components/admin/UniversitiesManager';
+import { SUPPORTED_LOCALES, isRtlLocale } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { SEOHead } from '@/components/seo';
 import { generateLocalizedSlug } from '@/lib/seo/slug';
@@ -19,6 +20,7 @@ const UniversityPage = () => {
   const { id, slug, locale } = useParams();
   const location = useLocation();
   const identifier = slug || id;
+  const rtl = isRtlLocale(locale);
   const [university, setUniversity] = useState(null);
   const [hiddenForUsers, setHiddenForUsers] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null);
@@ -36,6 +38,45 @@ const UniversityPage = () => {
 
   const galleryRef = useRef(null);
   const [activeDot, setActiveDot] = useState(0);
+  const dragState = useRef({ isDragging: false, startX: 0, scrollStartX: 0, wasDragged: false });
+
+  const handleGalleryMouseDown = (e) => {
+    dragState.current.isDragging = true;
+    dragState.current.startX = e.pageX;
+    dragState.current.scrollStartX = galleryRef.current.scrollLeft;
+    dragState.current.wasDragged = false;
+  };
+
+  const handleGalleryMouseMove = (e) => {
+    const ds = dragState.current;
+    if (!ds.isDragging) return;
+    e.preventDefault();
+    const deltaX = e.pageX - ds.startX;
+    if (Math.abs(deltaX) > 5) ds.wasDragged = true;
+    galleryRef.current.scrollLeft = ds.scrollStartX - deltaX;
+  };
+
+  const handleGalleryMouseUp = () => {
+    dragState.current.isDragging = false;
+  };
+
+  const handleGalleryMouseLeave = () => {
+    dragState.current.isDragging = false;
+  };
+
+  const handleChildClick = (idx) => () => {
+    if (dragState.current.wasDragged) return;
+    setLightboxIndex(idx);
+  };
+
+  const scrollGalleryTo = (idx) => {
+    const container = galleryRef.current;
+    if (!container) return;
+    const child = container.children[idx];
+    if (!child) return;
+    const targetLeft = child.offsetLeft;
+    container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (lightboxIndex !== null) {
@@ -49,6 +90,16 @@ const UniversityPage = () => {
   useEffect(() => {
     const el = galleryRef.current;
     if (!el || !university?.images?.length) return;
+
+    const handleWheel = (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        const multiplier = e.deltaMode === 1 ? 32 : 2.5;
+        el.scrollLeft += e.deltaY * multiplier;
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+
     const handleScroll = () => {
       const children = Array.from(el.children);
       let closest = 0;
@@ -62,7 +113,10 @@ const UniversityPage = () => {
     };
     el.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => el.removeEventListener('scroll', handleScroll);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      el.removeEventListener('wheel', handleWheel);
+    };
   }, [university?.images?.length]);
 
   useEffect(() => {
@@ -306,7 +360,9 @@ const UniversityPage = () => {
                   <h1 className="text-5xl font-black text-white mb-4">{university?.translations?.[locale]?.name || university.name}</h1>
                   <div className="flex items-center gap-2 text-gray-200">
                     <MapPin className="w-5 h-5" />
-                    <span className="text-lg">{university?.translations?.[locale]?.location || university.location}</span>
+                    <span className="text-lg">
+                      {getLocalizedCountryLabel(university.country, locale)} • {getLocalizedCity(university.city, locale) || '—'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -317,7 +373,11 @@ const UniversityPage = () => {
                     <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
                     <div
                       ref={galleryRef}
-                      className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-2"
+                      className="relative flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-proximity scroll-smooth pb-2 select-none cursor-grab active:cursor-grabbing"
+                      onMouseDown={handleGalleryMouseDown}
+                      onMouseMove={handleGalleryMouseMove}
+                      onMouseUp={handleGalleryMouseUp}
+                      onMouseLeave={handleGalleryMouseLeave}
                     >
                       {university.images.map((img, idx) => (
                         <motion.div
@@ -327,7 +387,7 @@ const UniversityPage = () => {
                           viewport={{ once: true, margin: '-80px' }}
                           transition={{ duration: 0.5, delay: idx * 0.06, ease: [0.25, 0.1, 0.25, 1] }}
                           className="snap-start shrink-0 cursor-pointer"
-                          onClick={() => setLightboxIndex(idx)}
+                          onClick={handleChildClick(idx)}
                         >
                           <div className="w-72 md:w-80 aspect-[4/3] rounded-xl overflow-hidden shadow-lg bg-secondary/50 group relative">
                             <img
@@ -345,23 +405,39 @@ const UniversityPage = () => {
                             </div>
                           </div>
                         </motion.div>
-                      ))}
-                    </div>
-                    <div className="flex justify-center items-center gap-1.5 mt-4">
-                      {university.images.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            galleryRef.current?.children[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                          }}
-                          className={`rounded-full transition-all duration-500 ease-out ${
-                            idx === activeDot
-                              ? 'w-7 h-2 bg-primary'
-                              : 'w-2 h-2 bg-primary/30 hover:bg-primary/50'
-                          }`}
-                        />
-                      ))}
-                    </div>
+                       ))}
+                     </div>
+                     {rtl ? (
+                       activeDot < university.images.length - 1 ? (
+                         <button onClick={() => scrollGalleryTo(activeDot + 1)} className="absolute left-2 top-1/2 -translate-y-1/2 z-20 text-primary text-5xl md:text-6xl opacity-60 hover:opacity-100 select-none transition-all duration-300" style={{ marginTop: '-10px' }}>›</button>
+                       ) : null
+                     ) : (
+                       activeDot > 0 ? (
+                         <button onClick={() => scrollGalleryTo(activeDot - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 z-20 text-primary text-5xl md:text-6xl opacity-60 hover:opacity-100 select-none transition-all duration-300" style={{ marginTop: '-10px' }}>‹</button>
+                       ) : null
+                     )}
+                     {rtl ? (
+                       activeDot > 0 ? (
+                         <button onClick={() => scrollGalleryTo(activeDot - 1)} className="absolute right-2 top-1/2 -translate-y-1/2 z-20 text-primary text-5xl md:text-6xl opacity-60 hover:opacity-100 select-none transition-all duration-300" style={{ marginTop: '-10px' }}>‹</button>
+                       ) : null
+                     ) : (
+                       activeDot < university.images.length - 1 ? (
+                         <button onClick={() => scrollGalleryTo(activeDot + 1)} className="absolute right-2 top-1/2 -translate-y-1/2 z-20 text-primary text-5xl md:text-6xl opacity-60 hover:opacity-100 select-none transition-all duration-300" style={{ marginTop: '-10px' }}>›</button>
+                       ) : null
+                     )}
+                     <div className="flex justify-center items-center gap-1.5 mt-4">
+                       {university.images.map((_, idx) => (
+                         <button
+                           key={idx}
+                           onClick={() => scrollGalleryTo(idx)}
+                           className={`rounded-full transition-all duration-500 ease-out ${
+                             idx === activeDot
+                               ? 'w-7 h-2 bg-primary'
+                               : 'w-2 h-2 bg-primary/30 hover:bg-primary/50'
+                           }`}
+                         />
+                       ))}
+                     </div>
                   </div>
                 </div>
               )}
@@ -480,11 +556,23 @@ const UniversityPage = () => {
           <button className="absolute top-4 right-4 z-20 bg-black/60 rounded-full p-2 text-white hover:text-gray-300" onClick={closeLightbox}>
             <X className="w-8 h-8" />
           </button>
-          {lightboxIndex > 0 && (
-            <button className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-gray-300 text-6xl opacity-70 hover:opacity-100 select-none" onClick={(e) => { e.stopPropagation(); prevImage(); }}>‹</button>
+          {rtl ? (
+            lightboxIndex < university.images.length - 1 ? (
+              <button className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-gray-300 text-6xl opacity-70 hover:opacity-100 select-none" onClick={(e) => { e.stopPropagation(); nextImage(); }}>›</button>
+            ) : null
+          ) : (
+            lightboxIndex > 0 ? (
+              <button className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-gray-300 text-6xl opacity-70 hover:opacity-100 select-none" onClick={(e) => { e.stopPropagation(); prevImage(); }}>‹</button>
+            ) : null
           )}
-          {lightboxIndex < university.images.length - 1 && (
-            <button className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-gray-300 text-6xl opacity-70 hover:opacity-100 select-none" onClick={(e) => { e.stopPropagation(); nextImage(); }}>›</button>
+          {rtl ? (
+            lightboxIndex > 0 ? (
+              <button className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-gray-300 text-6xl opacity-70 hover:opacity-100 select-none" onClick={(e) => { e.stopPropagation(); prevImage(); }}>‹</button>
+            ) : null
+          ) : (
+            lightboxIndex < university.images.length - 1 ? (
+              <button className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-gray-300 text-6xl opacity-70 hover:opacity-100 select-none" onClick={(e) => { e.stopPropagation(); nextImage(); }}>›</button>
+            ) : null
           )}
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden" onClick={closeLightbox}>
             <img

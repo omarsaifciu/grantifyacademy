@@ -70,21 +70,8 @@ export function validateHreflangReciprocity(allPageVariants) {
   return { valid: errorRate < 0.05, errors, errorRate, totalChecks }
 }
 
-export async function checkPageExists(url) {
-  if (HTACCESS_CACHE[url] !== undefined) return HTACCESS_CACHE[url]
-
-  if (typeof window === 'undefined') return true
-
-  try {
-    const resp = await fetch(url, { method: 'HEAD' })
-    const exists = resp.status === 200
-    HTACCESS_CACHE[url] = exists
-    return exists
-  } catch {
-    HTACCESS_CACHE[url] = false
-    return false
-  }
-}
+// Removed client-side checkPageExists to keep SEO lib simple
+// Server-side sitemap building uses DB queries directly via storage.js
 
 export function renderHreflangTags(hreflangTags) {
   return hreflangTags.map(tag => ({

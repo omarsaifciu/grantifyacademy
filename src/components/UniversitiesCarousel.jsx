@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { MapPin, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { t } from '@/lib/i18n';
+import { getLocalizedCity, getLocalizedCountryLabel } from '@/components/admin/UniversitiesManager';
 
 export const UniversitiesCarousel = ({ universities }) => {
   const { locale } = useParams();
@@ -78,7 +79,9 @@ export const UniversitiesCarousel = ({ universities }) => {
                 <div className="p-6">
                   <div className="flex items-center gap-2 text-muted-foreground mb-3">
                     <MapPin className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{university.location}</span>
+                    <span className="text-sm">
+                      {getLocalizedCountryLabel(university.country, locale)} • {getLocalizedCity(university.city, locale) || '—'}
+                    </span>
                   </div>
                   
                   <div className="flex items-center gap-2 text-muted-foreground mb-4">

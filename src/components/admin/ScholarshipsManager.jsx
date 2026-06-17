@@ -10,6 +10,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/utils';
 import { getScholarships, createScholarship, updateScholarship, deleteScholarship, uploadImage, getDrafts, saveDraft, deleteDraft } from '@/lib/storage';
 import { validatePageBeforePublish } from '@/lib/seo/heading';
+import { generateScholarshipSchema, validateJSONLDSchema } from '@/lib/seo/jsonld';
+import { generateAutoSEODescription } from '@/lib/seo/metadata'
+import FocusKeywordsInput from '@/components/admin/FocusKeywordsInput'
+import SEOAnalyzer from '@/components/seo/SEOAnalyzer'
 
 const ScholarshipsManager = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -187,9 +191,43 @@ const ScholarshipsManager = () => {
     const formData = new FormData(e.target);
     const contentHtml = serializeBlocksToHtml(blocks);
 
-    const validation = validatePageBeforePublish({ type: 'scholarship', translations }, contentHtml)
-    if (!validation.valid) {
-      validation.errors.forEach(err => toast({ title: `تحذير SEO: ${err.message}`, variant: 'destructive' }))
+    // Validate heading structure and content blocks
+    const pageValidation = validatePageBeforePublish({ type: 'scholarship', translations }, contentHtml)
+    if (!pageValidation.valid) {
+      pageValidation.errors.forEach(err => toast({ title: `خطأ في هيكل الصفحة: ${err.message}`, variant: 'destructive' }))
+      return
+    }
+
+    // Validate JSON-LD schema for all 20 languages
+    try {
+      const baseLoc = DEFAULT_LOCALE
+      const tBase = translations[baseLoc] || {}
+      const basePayload = {
+        title: tBase.title || editingScholarship?.title || '',
+        description: tBase.description || editingScholarship?.description || '',
+      }
+      
+      // Get validation for each language
+      const allValidationResults = []
+      for (const lang of Object.keys(translations)) {
+        const schema = generateScholarshipSchema(basePayload, lang, '')
+        const result = validateJSONLDSchema(schema, lang)
+        allValidationResults.push({ lang, result })
+      }
+      
+      const jsonldErrors = allValidationResults
+        .filter(({ result }) => !result.valid)
+        .flatMap(({ lang, result }) => 
+          result.errors.map(err => `اللغة ${lang}: ${err}`)
+        )
+      
+      if (jsonldErrors.length > 0) {
+        jsonldErrors.forEach(err => toast({ title: `خطأ في JSON-LD: ${err}`, variant: 'destructive' }))
+        return
+      }
+    } catch (err) {
+      toast({ title: `خطأ في التحقق من JSON-LD: ${err.message}`, variant: 'destructive' })
+      return
     }
 
     const baseLoc = DEFAULT_LOCALE
@@ -209,7 +247,6 @@ const ScholarshipsManager = () => {
 
     if (editingScholarship) {
       await updateScholarship(editingScholarship.id, payload)
-      await deleteDraft('scholarship', editingScholarship.id)
       toast({ title: "تم تحديث المنحة بنجاح!" })
     } else {
       await createScholarship(payload)
@@ -309,14 +346,26 @@ const ScholarshipsManager = () => {
                     <div className="md:col-span-2">
                       <Label>وصف SEO المُنشأ تلقائياً ({loc})</Label>
                       <div className="text-sm text-muted-foreground bg-secondary/30 p-2 rounded min-h-[40px]">
-                        {translations[loc]?.description || translations[loc]?.excerpt || 'الوصف التلقائي سيتم إنشاؤه من المحتوى'}
+                        {generateAutoSEODescription(translations[loc]?.description || translations[loc]?.excerpt || translations[loc]?.title || '', loc, 155)}
                       </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>الكلمات المفتاحية (Focus Keywords) ({loc})</Label>
+                      <FocusKeywordsInput translations={translations} locale={loc} onChange={setTranslations} />
                     </div>
                   </div>
                 </TabsContent>
               ))}
             </Tabs>
-          </div>
+            </div>
+            <div className="mt-4">
+              <SEOAnalyzer
+                keywords={translations[activeLocale]?.focus_keywords || []}
+                title={(translations[activeLocale]?.title || '') + ' | Grantify Academy'}
+                description={translations[activeLocale]?.description || translations[activeLocale]?.excerpt || translations[activeLocale]?.title || ''}
+                lang={activeLocale}
+              />
+            </div>
           <div className="flex justify-end">
             <Button type="button" variant="outline" onClick={() => setShowPreview((v)=>!v)}>{showPreview ? 'إخفاء المعاينة' : 'معاينة'}</Button>
           </div>
@@ -463,7 +512,7 @@ const ScholarshipsManager = () => {
               <Button type="submit" className="flex-1" disabled={uploading}>
                 {editingScholarship ? 'تحديث' : 'إضافة'}
               </Button>
-              <Button type="button" variant="outline" className="flex-1" onClick={async () => { if (editingScholarship?.id) await deleteDraft('scholarship', editingScholarship.id); setEditingScholarship(null); setShowForm(false); }}>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => { setEditingScholarship(null); setShowForm(false); }}>
                 إلغاء
               </Button>
               <Button type="button" variant="secondary" onClick={async () => {

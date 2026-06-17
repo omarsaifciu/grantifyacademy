@@ -34,12 +34,11 @@ const BlogPostPage = () => {
         data = all.find(b => b.slug === slug || generateLocalizedSlug(b.translations?.en?.title || b.title || '', 'en') === slug);
       }
       setPost(data);
-      let isAuth = false;
-      try { const ok = await isAuthenticated(); isAuth = !!ok; setCanEdit(isAuth) } catch {}
+      try { const ok = await isAuthenticated(); setCanEdit(!!ok) } catch {}
       try {
         const drafts = await getDrafts('blog');
         const isDraft = (drafts || []).some((d) => d.id === data?.id);
-        setHiddenForUsers(isDraft && !isAuth);
+        setHiddenForUsers(isDraft && !canEdit);
       } catch {}
       if (data?.content) {
         const container = document.createElement('div');
@@ -132,32 +131,10 @@ const BlogPostPage = () => {
     return generateLocalizedSlug(title, locale);
   }, [slug, post, locale]);
 
-  if (hiddenForUsers) {
+  if (!post || hiddenForUsers) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground text-xl">{t(locale, 'page_unavailable')}</p>
-      </div>
-    );
-  }
-
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col items-center gap-4"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-              className="w-10 h-10 border-[3px] border-primary/20 border-t-primary rounded-full"
-            />
-          </motion.div>
-        </div>
+        <p className="text-muted-foreground text-xl">هذه الصفحة غير متاحة حالياً</p>
       </div>
     );
   }

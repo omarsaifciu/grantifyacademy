@@ -120,12 +120,6 @@ const LoginPage = () => {
                 نسيت كلمة المرور؟
               </Link>
             </div>
-
-            <div className="mt-6 p-4 bg-secondary/80 rounded-xl border">
-              <p className="text-sm text-muted-foreground text-center">
-                <strong className="text-foreground">للتجربة:</strong> admin@example.com / admin123
-              </p>
-            </div>
           </div>
         </motion.div>
       </div>

@@ -6,6 +6,8 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { getScholarships, getUniversities, getBlogPosts } from '../src/lib/storage.js'
+import { getLocalizedCategorySlug, generateLocalizedSlug } from '../src/lib/seo/slug.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PUBLIC_DIR = path.resolve(__dirname, '..', 'public')
@@ -15,34 +17,6 @@ const SUPPORTED_LOCALES = [
   'en', 'zh', 'es', 'ar', 'hi', 'fr', 'bn', 'pt', 'ru', 'ja',
   'de', 'ko', 'tr', 'vi', 'it', 'th', 'fa', 'sw', 'id', 'nl',
 ]
-
-const CATEGORY_SLUGS = {
-  en: { scholarships: 'scholarships', universities: 'universities', blog: 'blog' },
-  ar: { scholarships: 'منح', universities: 'جامعات', blog: 'مدونة' },
-  es: { scholarships: 'becas', universities: 'universidades', blog: 'blog' },
-  fr: { scholarships: 'bourses', universities: 'universites', blog: 'blog' },
-  pt: { scholarships: 'bolsas', universities: 'universidades', blog: 'blog' },
-  ru: { scholarships: 'stipendii', universities: 'universitety', blog: 'blog' },
-  de: { scholarships: 'stipendien', universities: 'universitaeten', blog: 'blog' },
-  zh: { scholarships: '奖学金', universities: '大学', blog: '博客' },
-  hi: { scholarships: 'छात्रवृत्तियां', universities: 'विश्वविद्यालय', blog: 'ब्लॉग' },
-  ja: { scholarships: '奨学金', universities: '大学', blog: 'ブログ' },
-  ko: { scholarships: '장학금', universities: '대학', blog: '블로그' },
-  tr: { scholarships: 'burslar', universities: 'universiteler', blog: 'blog' },
-  vi: { scholarships: 'hoc-bong', universities: 'truong-dai-hoc', blog: 'blog' },
-  it: { scholarships: 'borse-di-studio', universities: 'universita', blog: 'blog' },
-  th: { scholarships: 'ทุนการศึกษา', universities: 'มหาวิทยาลัย', blog: 'บล็อก' },
-  fa: { scholarships: 'بورسیه‌ها', universities: 'دانشگاه‌ها', blog: 'وبلاگ' },
-  sw: { scholarships: 'masomo', universities: 'vyuo', blog: 'blogu' },
-  id: { scholarships: 'beasiswa', universities: 'universitas', blog: 'blog' },
-  nl: { scholarships: 'beurzen', universities: 'universiteiten', blog: 'blog' },
-  bn: { scholarships: 'স্কলারশিপ', universities: 'বিশ্ববিদ্যালয়', blog: 'ব্লগ' },
-}
-
-function getLocalizedCategorySlug(category, lang) {
-  const langSlugs = CATEGORY_SLUGS[lang] || CATEGORY_SLUGS.en
-  return langSlugs[category] || category
-}
 
 function xmlEscape(str) {
   return String(str)
@@ -84,6 +58,49 @@ async function generateSitemaps() {
       })
     }
 
+    // Add real content pages from the database
+    try {
+      if (category === 'scholarships') {
+        const scholarships = await getScholarships()
+        for (const scholarship of scholarships) {
+          const slug = scholarship.slug || generateLocalizedSlug(scholarship.title || scholarship.translations?.[lang]?.title || '', lang)
+          const detailUrl = `${SITE_URL}/${lang}/${getLocalizedCategorySlug('scholarships', lang)}/${slug}`
+          urls.push({
+            loc: detailUrl,
+            lastmod: scholarship.updated_at || scholarship.created_at || date,
+            changefreq: 'weekly',
+            priority: '0.8',
+          })
+        }
+      } else if (category === 'universities') {
+        const universities = await getUniversities()
+        for (const university of universities) {
+          const slug = university.slug || generateLocalizedSlug(university.name || university.translations?.[lang]?.name || '', lang)
+          const detailUrl = `${SITE_URL}/${lang}/${getLocalizedCategorySlug('universities', lang)}/${slug}`
+          urls.push({
+            loc: detailUrl,
+            lastmod: university.updated_at || university.created_at || date,
+            changefreq: 'weekly',
+            priority: '0.8',
+          })
+        }
+      } else if (category === 'blog') {
+        const blogPosts = await getBlogPosts()
+        for (const post of blogPosts) {
+          const slug = post.slug || generateLocalizedSlug(post.title || post.translations?.[lang]?.title || '', lang)
+          const detailUrl = `${SITE_URL}/${lang}/${getLocalizedCategorySlug('blog', lang)}/${slug}`
+          urls.push({
+            loc: detailUrl,
+            lastmod: post.updated_at || post.created_at || date,
+            changefreq: 'weekly',
+            priority: '0.7',
+          })
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching ${category} for sitemap ${lang}:`, error)
+    }
+
     if (urls.length > 0) {
       const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -94,10 +111,7 @@ ${urls.map(url => `  <url>
     <changefreq>${url.changefreq}</changefreq>
     <priority>${url.priority}</priority>
 ${SUPPORTED_LOCALES.map(l => {
-  const altCategory = url.loc.split('/').slice(4).join('/')
-  const altUrl = l === lang
-    ? url.loc
-    : `${SITE_URL}/${l}/${altCategory}`
+  const altUrl = url.loc.replace(`/${lang}/`, `/${l}/`)
   return `    <xhtml:link rel="alternate" hreflang="${l}" href="${xmlEscape(altUrl)}" />`
 }).join('\n')}
     <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(urls[0].loc)}" />

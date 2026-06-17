@@ -26,67 +26,67 @@
     <xhtml:link rel="alternate" hreflang="sw" href="https://grantifyacademy.com/sw/" />
     <xhtml:link rel="alternate" hreflang="id" href="https://grantifyacademy.com/id/" />
     <xhtml:link rel="alternate" hreflang="nl" href="https://grantifyacademy.com/nl/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/de/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/en/" />
   </url>
   <url>
-    <loc>https://grantifyacademy.com/de/stipendien</loc>
+    <loc>https://grantifyacademy.com/de/scholarships</loc>
     <lastmod>2026-06-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://grantifyacademy.com/en/stipendien" />
-    <xhtml:link rel="alternate" hreflang="zh" href="https://grantifyacademy.com/zh/stipendien" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://grantifyacademy.com/es/stipendien" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://grantifyacademy.com/ar/stipendien" />
-    <xhtml:link rel="alternate" hreflang="hi" href="https://grantifyacademy.com/hi/stipendien" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://grantifyacademy.com/fr/stipendien" />
-    <xhtml:link rel="alternate" hreflang="bn" href="https://grantifyacademy.com/bn/stipendien" />
-    <xhtml:link rel="alternate" hreflang="pt" href="https://grantifyacademy.com/pt/stipendien" />
-    <xhtml:link rel="alternate" hreflang="ru" href="https://grantifyacademy.com/ru/stipendien" />
-    <xhtml:link rel="alternate" hreflang="ja" href="https://grantifyacademy.com/ja/stipendien" />
-    <xhtml:link rel="alternate" hreflang="de" href="https://grantifyacademy.com/de/stipendien" />
-    <xhtml:link rel="alternate" hreflang="ko" href="https://grantifyacademy.com/ko/stipendien" />
-    <xhtml:link rel="alternate" hreflang="tr" href="https://grantifyacademy.com/tr/stipendien" />
-    <xhtml:link rel="alternate" hreflang="vi" href="https://grantifyacademy.com/vi/stipendien" />
-    <xhtml:link rel="alternate" hreflang="it" href="https://grantifyacademy.com/it/stipendien" />
-    <xhtml:link rel="alternate" hreflang="th" href="https://grantifyacademy.com/th/stipendien" />
-    <xhtml:link rel="alternate" hreflang="fa" href="https://grantifyacademy.com/fa/stipendien" />
-    <xhtml:link rel="alternate" hreflang="sw" href="https://grantifyacademy.com/sw/stipendien" />
-    <xhtml:link rel="alternate" hreflang="id" href="https://grantifyacademy.com/id/stipendien" />
-    <xhtml:link rel="alternate" hreflang="nl" href="https://grantifyacademy.com/nl/stipendien" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/de/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://grantifyacademy.com/en/scholarships" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://grantifyacademy.com/zh/scholarships" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://grantifyacademy.com/es/scholarships" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://grantifyacademy.com/ar/scholarships" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://grantifyacademy.com/hi/scholarships" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://grantifyacademy.com/fr/scholarships" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://grantifyacademy.com/bn/scholarships" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://grantifyacademy.com/pt/scholarships" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://grantifyacademy.com/ru/scholarships" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://grantifyacademy.com/ja/scholarships" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://grantifyacademy.com/de/scholarships" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://grantifyacademy.com/ko/scholarships" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://grantifyacademy.com/tr/scholarships" />
+    <xhtml:link rel="alternate" hreflang="vi" href="https://grantifyacademy.com/vi/scholarships" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://grantifyacademy.com/it/scholarships" />
+    <xhtml:link rel="alternate" hreflang="th" href="https://grantifyacademy.com/th/scholarships" />
+    <xhtml:link rel="alternate" hreflang="fa" href="https://grantifyacademy.com/fa/scholarships" />
+    <xhtml:link rel="alternate" hreflang="sw" href="https://grantifyacademy.com/sw/scholarships" />
+    <xhtml:link rel="alternate" hreflang="id" href="https://grantifyacademy.com/id/scholarships" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://grantifyacademy.com/nl/scholarships" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/en/" />
   </url>
   <url>
-    <loc>https://grantifyacademy.com/de/universitaeten</loc>
+    <loc>https://grantifyacademy.com/de/universities</loc>
     <lastmod>2026-06-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://grantifyacademy.com/en/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="zh" href="https://grantifyacademy.com/zh/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://grantifyacademy.com/es/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://grantifyacademy.com/ar/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="hi" href="https://grantifyacademy.com/hi/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://grantifyacademy.com/fr/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="bn" href="https://grantifyacademy.com/bn/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="pt" href="https://grantifyacademy.com/pt/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="ru" href="https://grantifyacademy.com/ru/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="ja" href="https://grantifyacademy.com/ja/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="de" href="https://grantifyacademy.com/de/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="ko" href="https://grantifyacademy.com/ko/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="tr" href="https://grantifyacademy.com/tr/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="vi" href="https://grantifyacademy.com/vi/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="it" href="https://grantifyacademy.com/it/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="th" href="https://grantifyacademy.com/th/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="fa" href="https://grantifyacademy.com/fa/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="sw" href="https://grantifyacademy.com/sw/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="id" href="https://grantifyacademy.com/id/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="nl" href="https://grantifyacademy.com/nl/universitaeten" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/de/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://grantifyacademy.com/en/universities" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://grantifyacademy.com/zh/universities" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://grantifyacademy.com/es/universities" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://grantifyacademy.com/ar/universities" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://grantifyacademy.com/hi/universities" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://grantifyacademy.com/fr/universities" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://grantifyacademy.com/bn/universities" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://grantifyacademy.com/pt/universities" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://grantifyacademy.com/ru/universities" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://grantifyacademy.com/ja/universities" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://grantifyacademy.com/de/universities" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://grantifyacademy.com/ko/universities" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://grantifyacademy.com/tr/universities" />
+    <xhtml:link rel="alternate" hreflang="vi" href="https://grantifyacademy.com/vi/universities" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://grantifyacademy.com/it/universities" />
+    <xhtml:link rel="alternate" hreflang="th" href="https://grantifyacademy.com/th/universities" />
+    <xhtml:link rel="alternate" hreflang="fa" href="https://grantifyacademy.com/fa/universities" />
+    <xhtml:link rel="alternate" hreflang="sw" href="https://grantifyacademy.com/sw/universities" />
+    <xhtml:link rel="alternate" hreflang="id" href="https://grantifyacademy.com/id/universities" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://grantifyacademy.com/nl/universities" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/en/" />
   </url>
   <url>
     <loc>https://grantifyacademy.com/de/blog</loc>
     <lastmod>2026-06-16</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://grantifyacademy.com/en/blog" />
     <xhtml:link rel="alternate" hreflang="zh" href="https://grantifyacademy.com/zh/blog" />
     <xhtml:link rel="alternate" hreflang="es" href="https://grantifyacademy.com/es/blog" />
@@ -107,6 +107,6 @@
     <xhtml:link rel="alternate" hreflang="sw" href="https://grantifyacademy.com/sw/blog" />
     <xhtml:link rel="alternate" hreflang="id" href="https://grantifyacademy.com/id/blog" />
     <xhtml:link rel="alternate" hreflang="nl" href="https://grantifyacademy.com/nl/blog" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/de/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://grantifyacademy.com/en/" />
   </url>
 </urlset>

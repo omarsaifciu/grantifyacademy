@@ -55,7 +55,9 @@ export default function SEOHead({ page, lang, pageType, slug, items, existingLan
         <link key={link.hrefLang} rel={link.rel} hrefLang={link.hrefLang} href={link.href} />
       ))}
 
-      <link rel="alternate" hrefLang="x-default" href={seo.hreflang.find(h => h.lang === 'x-default')?.url || seo.canonical} />
+      {seo.og_image && (
+        <link rel="preload" as="image" href={seo.og_image} />
+      )}
 
       {currentPage && totalPages && generatePaginationUrls(lang, pageType === 'blog' ? 'blog' : pageType === 'university' ? 'universities' : 'scholarships', slug, currentPage, totalPages).prev && (
         <link rel="prev" href={generatePaginationUrls(lang, pageType === 'blog' ? 'blog' : pageType === 'university' ? 'universities' : 'scholarships', slug, currentPage, totalPages).prev} />

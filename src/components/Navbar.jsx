@@ -6,7 +6,7 @@ import lightLogo from '@/assets/logo-header/logo light mode header.png';
 import darkLogo from '@/assets/logo-header/logo dark mode header.png';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
-import { DEFAULT_LOCALE, isRtlLocale, cn } from '@/lib/utils';
+import { SUPPORTED_LOCALES, LOCALE_LABELS, DEFAULT_LOCALE, isRtlLocale, cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { isAuthenticated, getCurrentUser } from '@/lib/auth';
 import LanguageSwitcher from '@/components/seo/LanguageSwitcher';
@@ -66,6 +66,13 @@ export const Navbar = () => {
             <Link to={`/${currentLocale}/blog`} className="text-foreground hover:text-primary transition-colors font-semibold">
               {t(currentLocale, 'nav_blog')}
             </Link>
+            <ThemeToggle />
+            <LanguageSwitcher variant="button" />
+            <Link to={`/${currentLocale}/apply`}>
+              <Button>
+                {t(currentLocale, 'nav_apply_now')}
+              </Button>
+            </Link>
             {authUser ? (
               <Link to={`/${currentLocale}/admin`}>
                 <Button variant="outline" className="gap-2">
@@ -81,13 +88,6 @@ export const Navbar = () => {
                 </Button>
               </Link>
             )}
-            <ThemeToggle />
-            <LanguageSwitcher variant="button" />
-            <Link to={`/${currentLocale}/apply`}>
-              <Button>
-                {t(currentLocale, 'nav_apply_now')}
-              </Button>
-            </Link>
           </div>
 
           <button
@@ -118,6 +118,15 @@ export const Navbar = () => {
               <Link to={`/${currentLocale}/blog`} className="text-foreground hover:text-primary transition-colors font-semibold">
                 {t(currentLocale, 'nav_blog')}
               </Link>
+              <div className="flex items-center justify-between">
+                <ThemeToggle />
+                <LanguageSwitcher variant="button" />
+                <Link to={`/${currentLocale}/apply`} className="flex-1">
+                    <Button className="w-full">
+                    {t(currentLocale, 'nav_apply_now')}
+                    </Button>
+                </Link>
+              </div>
               {authUser ? (
                 <Link to={`/${currentLocale}/admin`}>
                   <Button variant="outline" className="w-full gap-2">
@@ -133,15 +142,6 @@ export const Navbar = () => {
                   </Button>
                 </Link>
               )}
-              <div className="flex items-center justify-between">
-                <Link to={`/${currentLocale}/apply`} className="flex-1">
-                    <Button className="w-full">
-                    {t(currentLocale, 'nav_apply_now')}
-                    </Button>
-                </Link>
-                <ThemeToggle />
-                <LanguageSwitcher />
-              </div>
             </div>
           </motion.div>
         )}

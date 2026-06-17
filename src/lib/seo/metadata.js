@@ -1,10 +1,17 @@
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/utils'
 import { getLocalizedCategorySlug } from './slug'
 
-const SITE_NAME = 'Grantify Academy'
 const BRAND = 'Grantify Academy'
 const OG_IMAGE_DEFAULT = '/og-default.jpg'
-const TWITTER_HANDLE = '@grantifyacademy'
+
+const SHORT_CTA = {
+  ar: 'قدم الآن', en: 'Apply now', es: 'Solicita ahora', fr: 'Postulez',
+  pt: 'Inscreva-se', ru: 'Подайте заявку', de: 'Jetzt bewerben',
+  zh: '立即申请', hi: 'अभी आवेदन करें', ja: '今すぐ申し込む',
+  ko: '지금 신청', tr: 'Başvur', vi: 'Đăng ký', it: 'Candidati',
+  th: 'สมัครตอนนี้', fa: 'اقدام کنید', sw: 'Tuma ombi', id: 'Daftar',
+  nl: 'Solliciteer', bn: 'এখনই আবেদন',
+}
 
 const BCP47_MAP = {
   en: 'en_US', ar: 'ar_SA', es: 'es_ES', fr: 'fr_FR', pt: 'pt_BR',
@@ -22,7 +29,12 @@ function getSiteUrl() {
   return import.meta.env.VITE_SITE_URL || 'https://grantifyacademy.com'
 }
 
-function truncateTo(str, maxLen) {
+function stripHtml(text) {
+  if (!text) return ''
+  return text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+export function truncateTo(str, maxLen) {
   if (!str || str.length <= maxLen) return str || ''
   return str.substring(0, maxLen - 1).trim() + '…'
 }
@@ -34,37 +46,50 @@ function getLocalizedText(item, lang, field) {
     || ''
 }
 
+export function generateAutoSEODescription(text, lang = 'en', maxLen = 155) {
+  const clean = stripHtml(text)
+  if (!clean) return ''
+
+  const cta = SHORT_CTA[lang] || SHORT_CTA.en
+  const ctaSpace = cta.length + 3
+  const contentMax = Math.max(60, maxLen - ctaSpace)
+
+  const truncated = truncateTo(clean, contentMax)
+  return `${truncated} — ${cta}`
+}
+
 function buildDescription(page, lang, pageType) {
-  const desc = getLocalizedText(page, lang, 'seoDescription')
-    || getLocalizedText(page, lang, 'description')
+  const seoDesc = getLocalizedText(page, lang, 'seo_description') || getLocalizedText(page, lang, 'seoDescription')
+  if (seoDesc) {
+    if (seoDesc.length <= 155) return seoDesc
+    return truncateTo(seoDesc, 152)
+  }
+
+  const desc = getLocalizedText(page, lang, 'description')
     || getLocalizedText(page, lang, 'excerpt')
     || ''
 
-  if (desc && desc.length <= 155) return desc
+  if (desc) return generateAutoSEODescription(desc, lang, 155)
 
-  if (desc) return truncateTo(desc, 152)
-
-  const ctaVerbs = {
-    ar: 'قدم الآن', en: 'Apply now', es: 'Solicita ahora', fr: 'Postulez maintenant',
-    pt: 'Inscreva-se agora', ru: 'Подайте заявку сейчас', de: 'Jetzt bewerben',
-    zh: '立即申请', hi: 'अभी आवेदन करें', ja: '今すぐ申し込む', ko: '지금 신청하세요',
-    tr: 'Şimdi başvur', vi: 'Đăng ký ngay', it: 'Candidati ora',
-    th: 'สมัครตอนนี้', fa: 'اکنون اقدام کنید', sw: 'Tuma ombi sasa',
-    id: 'Daftar sekarang', nl: 'Solliciteer nu', bn: 'এখনই আবেদন করুন',
+  const contentText = page?.content ? stripHtml(page.content) : ''
+  if (contentText.length > 60) {
+    return generateAutoSEODescription(contentText, lang, 155)
   }
-  const verb = ctaVerbs[lang] || ctaVerbs.en
 
   if (pageType === 'scholarship') {
     const value = page.value || ''
     const name = getLocalizedText(page, lang, 'title')
-    return truncateTo(`${verb} — ${name}${value ? ` | قيمة ${value}` : ''}`, 152)
+    return truncateTo(`${name}${value ? ` | قيمة ${value}` : ''}`, 155)
   }
 
   const name = getLocalizedText(page, lang, 'title') || getLocalizedText(page, lang, 'name')
-  return truncateTo(`${verb} — ${name}`, 152)
+  return truncateTo(name, 155)
 }
 
 function buildTitle(page, lang, pageType) {
+  const seoTitle = getLocalizedText(page, lang, 'seo_title') || getLocalizedText(page, lang, 'seoTitle')
+  if (seoTitle) return `${seoTitle} | ${BRAND}`
+
   const keyword = getLocalizedText(page, lang, 'title')
     || getLocalizedText(page, lang, 'name')
     || ''

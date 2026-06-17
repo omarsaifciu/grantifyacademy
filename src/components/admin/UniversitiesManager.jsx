@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/dialog'
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/utils'
 import { validatePageBeforePublish } from '@/lib/seo/heading'
+import { generateAutoSEODescription } from '@/lib/seo/metadata'
+import FocusKeywordsInput from '@/components/admin/FocusKeywordsInput'
+import SEOAnalyzer from '@/components/seo/SEOAnalyzer'
 import {
   getUniversities,
   createUniversity,
@@ -55,6 +58,7 @@ import { Mistral } from '@mistralai/mistralai'
 const COUNTRIES = [
   { value: 'China', label: 'الصين' },
   { value: 'Cyprus', label: 'قبرص' },
+  { value: 'NorthCyprus', label: 'قبرص الشمالية' },
   { value: 'Georgia', label: 'جورجيا' },
   { value: 'Malaysia', label: 'ماليزيا' },
   { value: 'Germany', label: 'ألمانيا' },
@@ -74,6 +78,33 @@ const UNIVERSITY_TYPES = [
   { value: 'public', label: 'حكومية' },
   { value: 'private', label: 'خاصة' },
 ]
+
+// Create a mapping between countries and cities
+const mapCitiesToCountries = () => {
+  const countryToCitiesMap = {}
+  
+  countryToCitiesMap['Cyprus'] = ['نيقوسيا', 'ليماسول', 'لارنكا', 'بافوس', 'فاماغوستا', 'كيرينيا']
+  countryToCitiesMap['NorthCyprus'] = ['فاماغوستا', 'كيرينيا', 'أويون', 'بولياني', 'ديريم', 'إسكيلي', 'غركان', 'ليفكو', 'ماغوسا', 'نور', 'أويون', 'بافوس']
+  countryToCitiesMap['China'] = ['بكين', 'شنغهاي', 'قوانغتشو', 'شنتشن', 'هونغ كونغ']
+  countryToCitiesMap['Georgia'] = ['تبليسي', 'باتومي', 'كوتايسي']
+  countryToCitiesMap['Malaysia'] = ['كوالالمبور', 'بينانغ', 'جوهور باهرو']
+  countryToCitiesMap['Germany'] = ['برلين', 'ميونخ', 'فرانكفورت', 'هامبورغ', 'كولونيا']
+  countryToCitiesMap['UK'] = ['لندن', 'مانشستر', 'برمنغهام', 'ليفربول', 'غلاسكو']
+  countryToCitiesMap['Italy'] = ['روما', 'ميلانو', 'فلورنسا', 'بولونيا', 'تورينو']
+  countryToCitiesMap['Rwanda'] = ['كيغالي']
+  countryToCitiesMap['Syria'] = ['دمشق', 'حلب', 'حمص', 'اللاذقية']
+  countryToCitiesMap['Yemen'] = ['صنعاء', 'عدن', 'تعز']
+  countryToCitiesMap['Egypt'] = ['القاهرة', 'الإسكندرية', 'الجيزة', 'أسوان']
+  countryToCitiesMap['Jordan'] = ['عمان', 'إربد', 'الزرقاء', 'العقبة']
+  countryToCitiesMap['Lebanon'] = ['بيروت', 'طرابلس', 'صيدا', 'صور']
+  countryToCitiesMap['Saudi'] = ['الرياض', 'جدة', 'الدمام', 'مكة', 'المدينة المنورة']
+  countryToCitiesMap['UAE'] = ['دبي', 'أبوظبي', 'الشارقة', 'عجمان']
+  
+  return countryToCitiesMap
+}
+
+const countryToCitiesMap = mapCitiesToCountries()
+const allCities = [...new Set(Object.values(countryToCitiesMap).flat())].map(c => ({ value: c, label: c }))
 
 const ACCREDITATION_OPTIONS = [
   { value: 'international', label: 'معتمدة دولياً' },
@@ -153,7 +184,33 @@ const UniversitiesManager = () => {
   const [activeFormTab, setActiveFormTab] = useState('basic')
   const [isActive, setIsActive] = useState(true)
   const [selectedAccreditations, setSelectedAccreditations] = useState([])
+  const [filteredCities, setFilteredCities] = useState(allCities)
+  const tempIdCounter = useRef(-1)
   const { toast } = useToast()
+  const isTempId = (id) => typeof id === 'number' && id < 0
+
+  const handleCountryChange = (e) => {
+    const selectedCountry = e.target.value
+    if (selectedCountry) {
+      const citiesForCountry = countryToCitiesMap[selectedCountry] || []
+      setFilteredCities(
+        allCities.filter(city => citiesForCountry.includes(city.value))
+      )
+    } else {
+      setFilteredCities(allCities)
+    }
+  }
+
+  useEffect(() => {
+    if (editingUniversity?.country) {
+      const citiesForCountry = countryToCitiesMap[editingUniversity.country] || []
+      setFilteredCities(
+        allCities.filter(city => citiesForCountry.includes(city.value))
+      )
+    } else {
+      setFilteredCities(allCities)
+    }
+  }, [editingUniversity?.country])
 
   // AI auto-fill state
   const [showAiDialog, setShowAiDialog] = useState(false)
@@ -787,12 +844,36 @@ Important notes:
     let updatedUni;
     if (editingUniversity) {
       await updateUniversity(editingUniversity.id, payload)
-      await deleteDraft('university', editingUniversity.id)
       updatedUni = { ...editingUniversity, ...payload }
       toast({ title: 'تم تحديث الجامعة بنجاح!' })
     } else {
       updatedUni = await createUniversity(payload)
-      toast({ title: 'تم إضافة الجامعة بنجاح! يمكنك الآن إضافة مواعيد التقديم والبرامج والمستندات.' })
+      // Save related data with the new university ID
+      for (const intake of intakes) {
+        if (isTempId(intake.id)) {
+          const created = await createApplicationIntake({ ...intake, university_id: updatedUni.id })
+          Object.assign(intake, created)
+        }
+      }
+      for (const program of programs) {
+        if (isTempId(program.id)) {
+          const created = await createProgram({ ...program, university_id: updatedUni.id })
+          Object.assign(program, created)
+        }
+      }
+      for (const doc of requiredDocuments) {
+        if (isTempId(doc.id)) {
+          const created = await createRequiredDocument({ ...doc, university_id: updatedUni.id })
+          Object.assign(doc, created)
+        }
+      }
+      for (const req of nationalityRequirements) {
+        if (isTempId(req.id)) {
+          const created = await createNationalityRequirement({ ...req, university_id: updatedUni.id })
+          Object.assign(req, created)
+        }
+      }
+      toast({ title: 'تم إضافة الجامعة مع جميع البيانات بنجاح!' })
     }
 
     const data = await getUniversities()
@@ -810,38 +891,47 @@ Important notes:
 
   // Intake handlers
   const handleAddIntake = async () => {
-    if (!editingUniversity) return
     const newIntake = {
-      university_id: editingUniversity.id,
       semester_name: 'fall',
       application_open_date: new Date().toISOString().split('T')[0],
       application_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       expected_admission_result_date: '',
       semester_start_date: '',
     }
-    const created = await createApplicationIntake(newIntake)
-    setIntakes([...intakes, created])
-    setEditingIntake(created) // Immediately start editing so user can see all fields
+    if (editingUniversity) {
+      newIntake.university_id = editingUniversity.id
+      const created = await createApplicationIntake(newIntake)
+      setIntakes([...intakes, created])
+      setEditingIntake(created)
+    } else {
+      newIntake.id = tempIdCounter.current--
+      setIntakes([...intakes, newIntake])
+      setEditingIntake(newIntake)
+    }
     toast({ title: 'تم إضافة موعد التقديم!' })
   }
 
   const handleUpdateIntake = async (id, updates) => {
-    await updateApplicationIntake(id, updates)
-    setIntakes(intakes.map(i => i.id === id ? { ...i, ...updates } : i))
+    if (isTempId(id)) {
+      setIntakes(intakes.map(i => i.id === id ? { ...i, ...updates } : i))
+    } else {
+      await updateApplicationIntake(id, updates)
+      setIntakes(intakes.map(i => i.id === id ? { ...i, ...updates } : i))
+    }
     toast({ title: 'تم تحديث موعد التقديم!' })
   }
 
   const handleDeleteIntake = async (id) => {
-    await deleteApplicationIntake(id)
+    if (!isTempId(id)) {
+      await deleteApplicationIntake(id)
+    }
     setIntakes(intakes.filter(i => i.id !== id))
     toast({ title: 'تم حذف موعد التقديم!' })
   }
 
   // Program handlers
   const handleAddProgram = async () => {
-    if (!editingUniversity) return
     const newProgram = {
-      university_id: editingUniversity.id,
       program_name: '',
       degree_level: 'bachelor',
       study_language: 'english',
@@ -852,24 +942,37 @@ Important notes:
       is_active: true,
       translations: {},
     }
-    const created = await createProgram(newProgram)
-    setPrograms([...programs, created])
+    if (editingUniversity) {
+      newProgram.university_id = editingUniversity.id
+      const created = await createProgram(newProgram)
+      setPrograms([...programs, created])
+    } else {
+      newProgram.id = tempIdCounter.current--
+      setPrograms([...programs, newProgram])
+    }
     toast({ title: 'تم إضافة البرنامج!' })
   }
 
   const handleUpdateProgram = async (id, updates) => {
-    await updateProgram(id, updates)
-    setPrograms(programs.map(p => p.id === id ? { ...p, ...updates } : p))
+    if (isTempId(id)) {
+      setPrograms(programs.map(p => p.id === id ? { ...p, ...updates } : p))
+    } else {
+      await updateProgram(id, updates)
+      setPrograms(programs.map(p => p.id === id ? { ...p, ...updates } : p))
+    }
     toast({ title: 'تم تحديث البرنامج!' })
   }
 
   const handleDeleteProgram = async (id) => {
-    await deleteProgram(id)
+    if (!isTempId(id)) {
+      await deleteProgram(id)
+    }
     setPrograms(programs.filter(p => p.id !== id))
     toast({ title: 'تم حذف البرنامج!' })
   }
 
   const handleToggleProgramDocument = async (programId, docId, isRequired) => {
+    if (isTempId(programId) || isTempId(docId)) return
     const existing = (await getProgramRequiredDocuments(programId)).find(prd => prd.required_document_id === docId)
     if (existing) {
       if (existing.is_required !== isRequired) {
@@ -883,56 +986,77 @@ Important notes:
 
   // Required Document handlers
   const handleAddRequiredDocument = async () => {
-    if (!editingUniversity) return
     const newDoc = {
-      university_id: editingUniversity.id,
       name: '',
       description: '',
       is_active: true,
       translations: {},
     }
-    const created = await createRequiredDocument(newDoc)
-    setRequiredDocuments([...requiredDocuments, created])
-    setEditingRequiredDocument(created)
+    if (editingUniversity) {
+      newDoc.university_id = editingUniversity.id
+      const created = await createRequiredDocument(newDoc)
+      setRequiredDocuments([...requiredDocuments, created])
+      setEditingRequiredDocument(created)
+    } else {
+      newDoc.id = tempIdCounter.current--
+      setRequiredDocuments([...requiredDocuments, newDoc])
+      setEditingRequiredDocument(newDoc)
+    }
     toast({ title: 'تم إضافة المستند!' })
   }
 
   const handleUpdateRequiredDocument = async (id, updates) => {
-    await updateRequiredDocument(id, updates)
-    setRequiredDocuments(requiredDocuments.map(d => d.id === id ? { ...d, ...updates } : d))
+    if (isTempId(id)) {
+      setRequiredDocuments(requiredDocuments.map(d => d.id === id ? { ...d, ...updates } : d))
+    } else {
+      await updateRequiredDocument(id, updates)
+      setRequiredDocuments(requiredDocuments.map(d => d.id === id ? { ...d, ...updates } : d))
+    }
     toast({ title: 'تم تحديث المستند!' })
   }
 
   const handleDeleteRequiredDocument = async (id) => {
-    await deleteRequiredDocument(id)
+    if (!isTempId(id)) {
+      await deleteRequiredDocument(id)
+    }
     setRequiredDocuments(requiredDocuments.filter(d => d.id !== id))
     toast({ title: 'تم حذف المستند!' })
   }
 
   // Nationality Requirement handlers
   const handleAddNationalityRequirement = async () => {
-    if (!editingUniversity) return
     const newReq = {
-      university_id: editingUniversity.id,
       student_nationality: '',
       applies_to_destination: 'all',
       condition_text: '',
       severity: 'warning',
       translations: {},
     }
-    const created = await createNationalityRequirement(newReq)
-    setNationalityRequirements([...nationalityRequirements, created])
+    if (editingUniversity) {
+      newReq.university_id = editingUniversity.id
+      const created = await createNationalityRequirement(newReq)
+      setNationalityRequirements([...nationalityRequirements, created])
+    } else {
+      newReq.id = tempIdCounter.current--
+      setNationalityRequirements([...nationalityRequirements, newReq])
+    }
     toast({ title: 'تم إضافة شرط الجنسية!' })
   }
 
   const handleUpdateNationalityRequirement = async (id, updates) => {
-    await updateNationalityRequirement(id, updates)
-    setNationalityRequirements(nationalityRequirements.map(r => r.id === id ? { ...r, ...updates } : r))
+    if (isTempId(id)) {
+      setNationalityRequirements(nationalityRequirements.map(r => r.id === id ? { ...r, ...updates } : r))
+    } else {
+      await updateNationalityRequirement(id, updates)
+      setNationalityRequirements(nationalityRequirements.map(r => r.id === id ? { ...r, ...updates } : r))
+    }
     toast({ title: 'تم تحديث شرط الجنسية!' })
   }
 
   const handleDeleteNationalityRequirement = async (id) => {
-    await deleteNationalityRequirement(id)
+    if (!isTempId(id)) {
+      await deleteNationalityRequirement(id)
+    }
     setNationalityRequirements(nationalityRequirements.filter(r => r.id !== id))
     toast({ title: 'تم حذف شرط الجنسية!' })
   }
@@ -1098,6 +1222,7 @@ Important notes:
             onClick={() => {
               setEditingUniversity(null)
               setShowForm(prev => !prev)
+              setActiveFormTab('basic')
               setLogoImageUrl(null)
               setHeroImageUrl(null)
               setGalleryImages([])
@@ -1122,9 +1247,9 @@ Important notes:
           <Tabs value={activeFormTab} onValueChange={setActiveFormTab}>
             <TabsList className="mb-6">
               <TabsTrigger value="basic">البيانات الأساسية</TabsTrigger>
-              {editingUniversity && <TabsTrigger value="intakes">مواعيد التقديم</TabsTrigger>}
-              {editingUniversity && <TabsTrigger value="programs">البرامج الدراسية</TabsTrigger>}
-              {editingUniversity && <TabsTrigger value="documents">المستندات والشروط</TabsTrigger>}
+              <TabsTrigger value="intakes">مواعيد التقديم</TabsTrigger>
+              <TabsTrigger value="programs">البرامج الدراسية</TabsTrigger>
+              <TabsTrigger value="documents">المستندات والشروط</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic">
@@ -1137,6 +1262,7 @@ Important notes:
                       name="country"
                       defaultValue={editingUniversity?.country || 'Cyprus'}
                       className="w-full rounded-md border bg-transparent px-3 py-2"
+                      onChange={handleCountryChange}
                     >
                       {COUNTRIES.map(c => (
                         <option key={c.value} value={c.value}>{c.label}</option>
@@ -1145,7 +1271,17 @@ Important notes:
                   </div>
                   <div>
                     <Label htmlFor="city">المدينة</Label>
-                    <Input id="city" name="city" defaultValue={editingUniversity?.city} />
+                    <select
+                      id="city"
+                      name="city"
+                      defaultValue={editingUniversity?.city || ''}
+                      className="w-full rounded-md border bg-transparent px-3 py-2"
+                    >
+                      <option value="">اختر المدينة</option>
+                      {filteredCities.map(c => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <Label htmlFor="university_type">نوع الجامعة</Label>
@@ -1200,9 +1336,9 @@ Important notes:
                 </div>
 
                 <div>
-                  <Label>الشعار</Label>
+                  <Label htmlFor="logo_image">الشعار</Label>
                   <div
-                    className="mt-2 border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:bg-secondary/50 relative"
+                    className="mt-2 border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:bg-secondary/50"
                     onClick={() => logoFileInputRef.current?.click()}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={async (e) => {
@@ -1222,16 +1358,7 @@ Important notes:
                     ) : (
                       <>
                         {(logoImageUrl || editingUniversity?.logo_image) ? (
-                          <div className="relative inline-block">
-                            <img src={logoImageUrl || editingUniversity?.logo_image} alt="preview" className="mx-auto max-h-40 rounded-md" />
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setLogoImageUrl(null) }}
-                              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-destructive/90"
-                            >
-                              ✕
-                            </button>
-                          </div>
+                          <img src={logoImageUrl || editingUniversity?.logo_image} alt="preview" className="mx-auto max-h-40 rounded-md" />
                         ) : (
                           <div className="text-muted-foreground">اسحب وأسقط الصورة هنا أو اضغط للاختيار</div>
                         )}
@@ -1429,13 +1556,25 @@ Important notes:
                           <div className="md:col-span-2">
                             <Label>وصف SEO المُنشأ تلقائياً ({loc})</Label>
                             <div className="text-sm text-muted-foreground bg-secondary/30 p-2 rounded min-h-[40px]">
-                              {translations[loc]?.description || 'الوصف التلقائي سيتم إنشاؤه من المحتوى'}
+                              {generateAutoSEODescription(translations[loc]?.description || translations[loc]?.name || '', loc, 155)}
                             </div>
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label>الكلمات المفتاحية (Focus Keywords) ({loc})</Label>
+                            <FocusKeywordsInput translations={translations} locale={loc} onChange={setTranslations} />
                           </div>
                         </div>
                       </TabsContent>
                     ))}
                   </Tabs>
+                </div>
+                <div className="mt-4">
+                  <SEOAnalyzer
+                    keywords={translations[activeLocale]?.focus_keywords || []}
+                    title={(translations[activeLocale]?.name || '') + ' | Grantify Academy'}
+                    description={translations[activeLocale]?.description || translations[activeLocale]?.name || ''}
+                    lang={activeLocale}
+                  />
                 </div>
 
                 <div className="flex justify-end">
@@ -1575,7 +1714,7 @@ Important notes:
                   <Button type="submit" className="flex-1" disabled={uploading}>
                     {editingUniversity ? 'تحديث' : 'إضافة'}
                   </Button>
-                  <Button type="button" variant="outline" className="flex-1" onClick={async () => { if (editingUniversity?.id) await deleteDraft('university', editingUniversity.id); setEditingUniversity(null); setShowForm(false) }}>
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => { setEditingUniversity(null); setShowForm(false); setActiveFormTab('basic'); setLogoImageUrl(null); setHeroImageUrl(null); setGalleryImages([]) }}>
                     إلغاء
                   </Button>
                   <Button type="button" variant="secondary" onClick={async () => {
@@ -2105,4 +2244,42 @@ Important notes:
   )
 }
 
+// Function to get localized city names for all supported locales
+const getLocalizedCity = (arabicCity, locale) => {
+  // Basic mapping for major languages
+  const arabicToLocalized = {
+    'نيقوسيا': {
+      en: 'Nicosia', zh: '尼科西亚', es: 'Nicosia', fr: 'Nicosie', de: 'Nikosia', it: 'Nicosia', tr: 'Nikosya', pt: 'Nicósia', ru: 'Никосия', ja: 'ニコシア', ko: '니코시아', hi: 'निकोसिया', fa: 'نیکوسیا', th: 'นิกอเซีย', vi: 'Nicosia', id: 'Nikosia', nl: 'Nicosia', ar: 'نيقوسيا',
+    },
+    'ليماسول': {
+      en: 'Limassol', zh: '利马索尔', es: 'Limassol', fr: 'Limassol', de: 'Limassol', it: 'Limassol', tr: 'Limasol', pt: 'Limassol', ru: 'Лимассол', ja: 'リマソル', ko: '리마솔', hi: 'लिमासोल', fa: 'لیما sol', th: 'ลิมา โซล', vi: 'Limassol', id: 'Limasol', nl: 'Limassol', ar: 'ليماسول',
+    },
+    'لارنكا': {
+      en: 'Larnaca', zh: '拉纳卡', es: 'Larnaca', fr: 'Larnaca', de: 'Larnaca', it: 'Larnaca', tr: 'Larnaka', pt: 'Larnaca', ru: 'Ларнака', ja: 'ラーナカ', ko: '라르나카', hi: 'लार्नाका', fa: 'لارنکا', th: 'ลาร์นา คา', vi: 'Larnaca', id: 'Larnaka', nl: 'Larnaca', ar: 'لارنكا',
+    },
+    'بافوس': {
+      en: 'Paphos', zh: '帕福斯', es: 'Paphos', fr: 'Paphos', de: 'Paphos', it: 'Pafos', tr: 'Pafos', pt: 'Pafos', ru: 'Пафос', ja: 'パフォス', ko: '파포스', hi: 'पफोस', fa: 'پافوس', th: 'พาโฟส', vi: 'Paphos', id: 'Pafos', nl: 'Paphos', ar: 'بافوس',
+    },
+    'فاماغوستا': {
+      en: 'Famagusta', zh: '法马古斯塔', es: 'Famagusta', fr: 'Famagouste', de: 'Famagusta', it: 'Famagusta', tr: 'Famagusta', pt: 'Famagusta', ru: 'Фамагуста', ja: 'ファマグスタ', ko: '파마구스타', hi: 'फमागुस्ता', fa: 'فاماگوستا', th: 'แฟ มา กุส ตา', vi: 'Famagusta', id: 'Famagusta', nl: 'Famagusta', ar: 'فاماغوستا',
+    },
+    'كيرينيا': {
+      en: 'Kyrenia', zh: '基雷尼亚', es: 'Kyrenia', fr: 'Kérenia', de: 'Kyrenia', it: 'Kyrenia', tr: 'Kyrinia', pt: 'Kirenia', ru: 'Кириния', ja: 'キレニア', ko: '키레니아', hi: 'किरीनिया', fa: 'کیرینیا', th: 'คิ รี นี ยา', vi: 'Kyrenia', id: 'Kyrinia', nl: 'Kyrenia', ar: 'كيرينيا',
+    },
+  }
+  return arabicToLocalized[arabicCity]?.[locale] || arabicCity
+}
+
+// Function to get localized country names for all supported locales
+const getLocalizedCountryLabel = (countryValue, locale) => {
+  const country = COUNTRIES.find(c => c.value === countryValue);
+  if (!country) return countryValue;
+  
+  const label = country.label;
+  if (typeof label === 'string') return label;
+  
+  return label[locale] || label.en || label.ar || Object.values(label)[0] || countryValue;
+}
+
 export default UniversitiesManager
+export { COUNTRIES, getLocalizedCity, getLocalizedCountryLabel }
