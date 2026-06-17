@@ -17,7 +17,7 @@ export const Hero = ({ backgroundImage }) => {
             alt=""
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
-            onError={(e) => { e.currentTarget.src = placeholder; }}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = placeholder; }}
           />
         </div>
       )}

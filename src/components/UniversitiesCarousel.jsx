@@ -4,11 +4,12 @@ import { Link, useParams } from 'react-router-dom';
 import { MapPin, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { t } from '@/lib/i18n';
-import { getLocalizedCity, getLocalizedCountryLabel } from '@/components/admin/UniversitiesManager';
+import { getLocalizedCity, getLocalizedCountryLabel } from '@/lib/universities-utils';
+
+const PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 800 600%27%3E%3Crect width=%27800%27 height=%27600%27 fill=%27%23e5e7eb%27/%3E%3C/svg%3E';
 
 export const UniversitiesCarousel = ({ universities }) => {
   const { locale } = useParams();
-  const placeholder = 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22><rect width=%22800%22 height=%22600%22 fill=%22%23e5e7eb%22/></svg>';
   const scrollRef = useRef(null);
 
   const scroll = (direction) => {
@@ -54,10 +55,9 @@ export const UniversitiesCarousel = ({ universities }) => {
         {universities.map((university, index) => (
           <motion.div
             key={university.id}
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.05 }}
             className="flex-shrink-0 w-80"
           >
             <Link to={`/${locale || 'ar'}/university/${university.id}`}>
@@ -68,7 +68,7 @@ export const UniversitiesCarousel = ({ universities }) => {
                     alt={university.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     referrerPolicy="no-referrer"
-                    onError={(e) => { e.currentTarget.src = placeholder; }}
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   <div className="absolute bottom-4 right-4 left-4">
@@ -86,7 +86,7 @@ export const UniversitiesCarousel = ({ universities }) => {
                   
                   <div className="flex items-center gap-2 text-muted-foreground mb-4">
                     <Users className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{university.students} {t(locale, 'students_suffix')}</span>
+                    <span className="text-sm">{university?.translations?.[locale]?.students || university?.translations?.ar?.students || university.students} {t(locale, 'students_suffix')}</span>
                   </div>
 
                   <p className="text-muted-foreground text-sm line-clamp-2 mb-4">

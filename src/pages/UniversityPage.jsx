@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { getUniversityById, updateUniversity, uploadImage, getDrafts, getUniversities } from '@/lib/storage';
+import { getUniversityById, updateUniversity, uploadImage, getDrafts, getUniversities, getPrograms } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
-import { getLocalizedCity, getLocalizedCountryLabel } from '@/components/admin/UniversitiesManager';
+import { getLocalizedCity, getLocalizedCountryLabel } from '@/lib/universities-utils';
 import { SUPPORTED_LOCALES, isRtlLocale } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { SEOHead } from '@/components/seo';
@@ -39,6 +39,7 @@ const UniversityPage = () => {
   const galleryRef = useRef(null);
   const [activeDot, setActiveDot] = useState(0);
   const dragState = useRef({ isDragging: false, startX: 0, scrollStartX: 0, wasDragged: false });
+  const saveRef = useRef(null);
 
   const handleGalleryMouseDown = (e) => {
     dragState.current.isDragging = true;
@@ -126,6 +127,18 @@ const UniversityPage = () => {
         const all = await getUniversities();
         data = all.find(u => u.slug === slug || generateLocalizedSlug(u.translations?.en?.name || u.name || '', 'en') === slug);
       }
+      if (data?.id) {
+        try {
+          const programsData = await getPrograms(data.id);
+          if (programsData?.length) {
+            const programsTranslations = {};
+            SUPPORTED_LOCALES.forEach(loc => {
+              programsTranslations[loc] = programsData.map(p => p.translations?.[loc]?.name || p.program_name || '');
+            });
+            data = { ...data, programs: programsData.map(p => p.program_name || ''), programsTranslations };
+          }
+        } catch {}
+      }
       setUniversity(data);
       let isAuth = false;
       try { const ok = await isAuthenticated(); isAuth = !!ok; setCanEdit(isAuth) } catch {}
@@ -199,7 +212,7 @@ const UniversityPage = () => {
 
   useEffect(() => {
     if (!editMode || !university) return;
-    const idTimer = setInterval(async () => {
+    const save = async () => {
       const getText = (t) => typeof t === 'object' ? (t?.[locale] || t?.ar || '') : (t || '');
       const html = blocks.map((b) => {
         if (b.type==='section') return `<h3 class="text-xl font-bold mb-4 text-foreground">${getText(b.heading)}</h3><p class="text-muted-foreground mb-6">${getText(b.paragraph)}</p>`;
@@ -213,9 +226,15 @@ const UniversityPage = () => {
       const updatedTranslations = { ...(university.translations || {}) };
       if (!updatedTranslations[locale]) updatedTranslations[locale] = {};
       updatedTranslations[locale] = { ...updatedTranslations[locale], contentBlocks };
-      const updated = await updateUniversity(university.id, { ...university, content: html, translations: updatedTranslations });
-      setUniversity(updated);
-    }, 10000);
+      try {
+        const updated = await updateUniversity(university.id, { ...university, content: html, translations: updatedTranslations });
+        if (updated) setUniversity((prev) => ({ ...prev, ...updated }));
+      } catch (err) {
+        console.error('Failed to save university:', err);
+      }
+    };
+    saveRef.current = save;
+    const idTimer = setInterval(save, 10000);
     return () => clearInterval(idTimer);
   }, [editMode, blocks, university]);
 
@@ -444,7 +463,12 @@ const UniversityPage = () => {
               <div className="p-8 md:p-12">
                 {canEdit && (
                   <div className="flex justify-end mb-4">
-                    <Button variant="outline" onClick={() => setEditMode((v) => !v)}>{editMode ? t(locale, 'scholarship_edit_finish') : t(locale, 'scholarship_edit_mode')}</Button>
+                    <Button variant="outline" onClick={async () => {
+                      if (editMode && saveRef.current) {
+                        await saveRef.current();
+                      }
+                      setEditMode((v) => !v);
+                    }}>{editMode ? t(locale, 'scholarship_edit_finish') : t(locale, 'scholarship_edit_mode')}</Button>
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -452,9 +476,9 @@ const UniversityPage = () => {
                     <Users className="w-8 h-8 text-primary mb-3" />
                     <p className="text-muted-foreground text-sm mb-1">{t(locale, 'university_students_label')}</p>
                     {!editMode ? (
-                      <p className="text-2xl font-bold text-foreground">{university?.translations?.[locale]?.students || university.students}</p>
+                      <p className="text-2xl font-bold text-foreground">{university?.translations?.[locale]?.students || university?.translations?.ar?.students || university.students}</p>
                     ) : (
-                      <Input value={university?.translations?.[locale]?.students || ''} onChange={(e)=>setUniversity((prev)=>({ ...prev, translations: { ...prev.translations, [locale]: { ...(prev.translations?.[locale]||{}), students: e.target.value } } }))} placeholder="عدد الطلاب" />
+                      <Input value={university?.translations?.[locale]?.students || university?.translations?.ar?.students || ''} onChange={(e)=>setUniversity((prev)=>({ ...prev, translations: { ...prev.translations, [locale]: { ...(prev.translations?.[locale]||{}), students: e.target.value } } }))} placeholder="عدد الطلاب" />
                     )}
                   </div>
                   <div className="bg-secondary/50 p-6 rounded-xl">
@@ -466,9 +490,9 @@ const UniversityPage = () => {
                     <Award className="w-8 h-8 text-primary mb-3" />
                     <p className="text-muted-foreground text-sm mb-1">{t(locale, 'university_rank_label')}</p>
                     {!editMode ? (
-                      <p className="text-2xl font-bold text-foreground">{university?.translations?.[locale]?.rank || t(locale, 'university_rank_excellent')}</p>
+                      <p className="text-2xl font-bold text-foreground">{university?.translations?.[locale]?.rank || university?.translations?.ar?.rank || t(locale, 'university_rank_excellent')}</p>
                     ) : (
-                      <Input value={university?.translations?.[locale]?.rank || ''} onChange={(e)=>setUniversity((prev)=>({ ...prev, translations: { ...prev.translations, [locale]: { ...(prev.translations?.[locale]||{}), rank: e.target.value } } }))} placeholder="التصنيف" />
+                      <Input value={university?.translations?.[locale]?.rank || university?.translations?.ar?.rank || ''} onChange={(e)=>setUniversity((prev)=>({ ...prev, translations: { ...prev.translations, [locale]: { ...(prev.translations?.[locale]||{}), rank: e.target.value } } }))} placeholder="التصنيف" />
                     )}
                   </div>
                 </div>
@@ -480,18 +504,6 @@ const UniversityPage = () => {
                     <textarea className="w-full min-h-[100px] rounded-md border bg-transparent px-3 py-2" value={university?.translations?.[locale]?.description || university.description} onChange={(e)=>setUniversity((prev)=>({ ...prev, translations: { ...prev.translations, [locale]: { ...(prev.translations?.[locale]||{}), description: e.target.value } } }))} placeholder="الوصف" />
                   )}
                 </div>
-                {university.programs && university.programs.length > 0 && (
-                  <div>
-                    <h2 className="text-3xl font-bold mb-6 text-foreground">{t(locale, 'university_programs_title')}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {(university?.programsTranslations?.[locale] || university.programs || []).map((program, index) => (
-                        <div key={index} className="bg-secondary/50 p-4 rounded-xl hover:bg-accent transition-colors">
-                          <p className="text-foreground font-semibold">{program}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 {!editMode ? (
                   (() => {
                     const contentBlocks = university?.translations?.[locale]?.contentBlocks;
@@ -544,6 +556,18 @@ const UniversityPage = () => {
                     </a>
                   </div>
                 </div>
+                {university.programs && university.programs.length > 0 && (
+                  <div className="mt-12">
+                    <h2 className="text-3xl font-bold mb-6 text-foreground">{t(locale, 'university_programs_title')}</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {(university?.programsTranslations?.[locale] || university.programs || []).map((program, index) => (
+                        <div key={index} className="bg-secondary/50 p-4 rounded-xl hover:bg-accent transition-colors">
+                          <p className="text-foreground font-semibold">{program}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

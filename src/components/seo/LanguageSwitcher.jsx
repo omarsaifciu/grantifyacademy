@@ -3,7 +3,8 @@ import { Link, useParams, useLocation } from 'react-router-dom'
 import { Languages } from 'lucide-react'
 import { SUPPORTED_LOCALES, LOCALE_LABELS, DEFAULT_LOCALE } from '@/lib/utils'
 import { getLocalizedCategorySlug, CATEGORY_SLUGS } from '@/lib/seo/slug'
-import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@/components/ui/dialog'
 
 function resolveEquivalentUrl(currentLang, targetLang, pathname) {
   const segments = pathname.split('/').filter(Boolean)
@@ -43,6 +44,9 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
           </button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
+          <VisuallyHidden.Root>
+            <DialogTitle>Choose a language</DialogTitle>
+          </VisuallyHidden.Root>
           <div className="grid grid-cols-3 gap-2 py-4">
             {SUPPORTED_LOCALES.map((lang) => {
               const url = resolveEquivalentUrl(currentLang, lang, location.pathname)

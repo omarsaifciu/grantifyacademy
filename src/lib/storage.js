@@ -325,7 +325,7 @@ export const createUniversity = async (university) => {
   }
   if (USE_SUPABASE) {
     if (!supabase) throw new Error('Supabase not configured')
-    const { accreditations, ...cleanData } = item
+    const { accreditations, students, ...cleanData } = item
     const { data, error } = await supabase.from('universities').insert(cleanData).select().single()
     if (error) throw error
     return data
@@ -348,7 +348,7 @@ export const updateUniversity = async (id, university) => {
   }
   if (USE_SUPABASE) {
     if (!supabase) throw new Error('Supabase not configured')
-    const { accreditations, ...cleanData } = item
+    const { accreditations, students, ...cleanData } = item
     const { data, error } = await supabase.from('universities').update(cleanData).eq('id', id).select().single()
     if (error) throw error
     return data

@@ -16,6 +16,8 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog'
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/utils'
+import { COUNTRIES, UNIVERSITY_TYPES, ACCREDITATION_OPTIONS, SEMESTERS, DEGREE_LEVELS, STUDY_LANGUAGES, SCHOLARSHIP_TYPES, LANGUAGE_REQUIREMENTS, INTAKE_STATUS_LABELS, countryToCitiesMap, allCities, mapCitiesToCountries } from '@/lib/universities-constants'
+import { getLocalizedCity, getLocalizedCountryLabel } from '@/lib/universities-utils'
 import { validatePageBeforePublish } from '@/lib/seo/heading'
 import { generateAutoSEODescription } from '@/lib/seo/metadata'
 import FocusKeywordsInput from '@/components/admin/FocusKeywordsInput'
@@ -55,105 +57,6 @@ import {
 } from '@/lib/storage'
 import { Mistral } from '@mistralai/mistralai'
 
-const COUNTRIES = [
-  { value: 'China', label: 'الصين' },
-  { value: 'Cyprus', label: 'قبرص' },
-  { value: 'NorthCyprus', label: 'قبرص الشمالية' },
-  { value: 'Georgia', label: 'جورجيا' },
-  { value: 'Malaysia', label: 'ماليزيا' },
-  { value: 'Germany', label: 'ألمانيا' },
-  { value: 'UK', label: 'البريطانيا' },
-  { value: 'Italy', label: 'إيطاليا' },
-  { value: 'Rwanda', label: 'رواندا' },
-  { value: 'Syria', label: 'سوريا' },
-  { value: 'Yemen', label: 'اليمن' },
-  { value: 'Egypt', label: 'مصر' },
-  { value: 'Jordan', label: 'الأردن' },
-  { value: 'Lebanon', label: 'لبنان' },
-  { value: 'Saudi', label: 'السعودية' },
-  { value: 'UAE', label: 'الإمارات' },
-]
-
-const UNIVERSITY_TYPES = [
-  { value: 'public', label: 'حكومية' },
-  { value: 'private', label: 'خاصة' },
-]
-
-// Create a mapping between countries and cities
-const mapCitiesToCountries = () => {
-  const countryToCitiesMap = {}
-  
-  countryToCitiesMap['Cyprus'] = ['نيقوسيا', 'ليماسول', 'لارنكا', 'بافوس', 'فاماغوستا', 'كيرينيا']
-  countryToCitiesMap['NorthCyprus'] = ['فاماغوستا', 'كيرينيا', 'أويون', 'بولياني', 'ديريم', 'إسكيلي', 'غركان', 'ليفكو', 'ماغوسا', 'نور', 'أويون', 'بافوس']
-  countryToCitiesMap['China'] = ['بكين', 'شنغهاي', 'قوانغتشو', 'شنتشن', 'هونغ كونغ']
-  countryToCitiesMap['Georgia'] = ['تبليسي', 'باتومي', 'كوتايسي']
-  countryToCitiesMap['Malaysia'] = ['كوالالمبور', 'بينانغ', 'جوهور باهرو']
-  countryToCitiesMap['Germany'] = ['برلين', 'ميونخ', 'فرانكفورت', 'هامبورغ', 'كولونيا']
-  countryToCitiesMap['UK'] = ['لندن', 'مانشستر', 'برمنغهام', 'ليفربول', 'غلاسكو']
-  countryToCitiesMap['Italy'] = ['روما', 'ميلانو', 'فلورنسا', 'بولونيا', 'تورينو']
-  countryToCitiesMap['Rwanda'] = ['كيغالي']
-  countryToCitiesMap['Syria'] = ['دمشق', 'حلب', 'حمص', 'اللاذقية']
-  countryToCitiesMap['Yemen'] = ['صنعاء', 'عدن', 'تعز']
-  countryToCitiesMap['Egypt'] = ['القاهرة', 'الإسكندرية', 'الجيزة', 'أسوان']
-  countryToCitiesMap['Jordan'] = ['عمان', 'إربد', 'الزرقاء', 'العقبة']
-  countryToCitiesMap['Lebanon'] = ['بيروت', 'طرابلس', 'صيدا', 'صور']
-  countryToCitiesMap['Saudi'] = ['الرياض', 'جدة', 'الدمام', 'مكة', 'المدينة المنورة']
-  countryToCitiesMap['UAE'] = ['دبي', 'أبوظبي', 'الشارقة', 'عجمان']
-  
-  return countryToCitiesMap
-}
-
-const countryToCitiesMap = mapCitiesToCountries()
-const allCities = [...new Set(Object.values(countryToCitiesMap).flat())].map(c => ({ value: c, label: c }))
-
-const ACCREDITATION_OPTIONS = [
-  { value: 'international', label: 'معتمدة دولياً' },
-  ...COUNTRIES.map(c => ({ value: c.value, label: `معتمدة في ${c.label}` })),
-]
-
-const SEMESTERS = [
-  { value: 'fall', label: 'خريف' },
-  { value: 'spring', label: 'ربيع' },
-  { value: 'summer', label: 'صيف' },
-]
-
-const DEGREE_LEVELS = [
-  { value: 'diploma', label: 'دبلوم' },
-  { value: 'bachelor', label: 'بكالوريوس' },
-  { value: 'master', label: 'ماجستير' },
-  { value: 'phd', label: 'دكتوراة' },
-]
-
-const STUDY_LANGUAGES = [
-  { value: 'english', label: 'إنجليزي' },
-  { value: 'chinese', label: 'صيني' },
-  { value: 'german', label: 'ألماني' },
-  { value: 'italian', label: 'إيطالي' },
-  { value: 'turkish', label: 'تركي' },
-  { value: 'other', label: 'آخر' },
-]
-
-const SCHOLARSHIP_TYPES = [
-  { value: 'none', label: 'بدون' },
-  { value: '25', label: 'منحة جزئية 25%' },
-  { value: '50', label: 'منحة جزئية 50%' },
-  { value: '75', label: 'منحة جزئية 75%' },
-  { value: 'full', label: 'منحة كاملة' },
-]
-
-const LANGUAGE_REQUIREMENTS = [
-  { value: 'none', label: 'لا يشترط' },
-  { value: 'ielts_toefl', label: 'يشترط IELTS أو TOEFL' },
-  { value: 'preparatory_year', label: 'سنة تحضيرية متاحة' },
-  { value: 'internal_test', label: 'اختبار داخلي' },
-]
-
-const INTAKE_STATUS_LABELS = {
-  open: { text: 'مفتوح الآن', color: 'bg-green-100 text-green-800' },
-  closed: { text: 'مغلق', color: 'bg-red-100 text-red-800' },
-  opening_soon: { text: 'يفتح قريباً', color: 'bg-yellow-100 text-yellow-800' },
-}
-
 const UniversitiesManager = () => {
   const [universities, setUniversities] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -176,6 +79,7 @@ const UniversitiesManager = () => {
   const [programs, setPrograms] = useState([])
   const [editingIntake, setEditingIntake] = useState(null)
   const [editingProgram, setEditingProgram] = useState(null)
+  const [programLocale, setProgramLocale] = useState(SUPPORTED_LOCALES[0])
   const [programSortOrder, setProgramSortOrder] = useState('asc')
   const [requiredDocuments, setRequiredDocuments] = useState([])
   const [editingRequiredDocument, setEditingRequiredDocument] = useState(null)
@@ -824,6 +728,7 @@ Important notes:
 
     const baseLoc = DEFAULT_LOCALE
     const tBase = translations[baseLoc] || {}
+    const anyStudents = Object.values(translations).find(v => v?.students)?.students || ''
     const payload = {
       name: tBase.name || editingUniversity?.name || '',
       country: formData.get('country') || 'Cyprus',
@@ -834,6 +739,7 @@ Important notes:
       logo_image: logoImageUrl || editingUniversity?.logo_image || '',
       image: heroImageUrl || editingUniversity?.image || '',
       images: galleryImages,
+      students: tBase.students || editingUniversity?.students || anyStudents,
       description: tBase.description || editingUniversity?.description || '',
       website_url: formData.get('website_url') || '',
       is_active: isActive,
@@ -1559,6 +1465,22 @@ Important notes:
                               {generateAutoSEODescription(translations[loc]?.description || translations[loc]?.name || '', loc, 155)}
                             </div>
                           </div>
+                          <div>
+                            <Label>عدد الطلاب ({loc})</Label>
+                            <Input
+                              value={translations[loc]?.students || ''}
+                              onChange={(e) => setTranslations(prev => ({ ...prev, [loc]: { ...(prev[loc] || {}), students: e.target.value } }))}
+                              placeholder={`مثال: 5000 ${loc === 'ar' ? 'طالب' : 'student'}`}
+                            />
+                          </div>
+                          <div>
+                            <Label>التصنيف ({loc})</Label>
+                            <Input
+                              value={translations[loc]?.rank || ''}
+                              onChange={(e) => setTranslations(prev => ({ ...prev, [loc]: { ...(prev[loc] || {}), rank: e.target.value } }))}
+                              placeholder={`مثال: ${loc === 'ar' ? 'ممتاز' : 'Excellent'}`}
+                            />
+                          </div>
                           <div className="md:col-span-2">
                             <Label>الكلمات المفتاحية (Focus Keywords) ({loc})</Label>
                             <FocusKeywordsInput translations={translations} locale={loc} onChange={setTranslations} />
@@ -1964,6 +1886,37 @@ Important notes:
                               </select>
                             </div>
                           </div>
+                          <div className="md:col-span-4 border-t pt-4">
+                            <Label>أسماء البرنامج بـ 20 لغة</Label>
+                            <div className="flex flex-wrap gap-1 mt-2 mb-3">
+                              {SUPPORTED_LOCALES.map(loc => (
+                                <button
+                                  key={loc}
+                                  type="button"
+                                  onClick={() => setProgramLocale(loc)}
+                                  className={`px-2 py-1 text-xs rounded ${programLocale === loc ? 'bg-primary text-primary-foreground' : 'bg-secondary/50 hover:bg-secondary'}`}
+                                >
+                                  {loc}
+                                </button>
+                              ))}
+                            </div>
+                            {SUPPORTED_LOCALES.map(loc => (
+                              <div key={loc} style={{ display: programLocale === loc ? 'block' : 'none' }}>
+                                <Label>اسم البرنامج ({loc})</Label>
+                                <Input
+                                  value={editingProgram.translations?.[loc]?.name || ''}
+                                  onChange={(e) => setEditingProgram(prev => ({
+                                    ...prev,
+                                    translations: {
+                                      ...(prev.translations || {}),
+                                      [loc]: { ...((prev.translations || {})[loc] || {}), name: e.target.value }
+                                    }
+                                  }))}
+                                  placeholder={`اسم البرنامج (${loc})`}
+                                />
+                              </div>
+                            ))}
+                          </div>
                           <div className="flex gap-2">
                             <Button onClick={() => { handleUpdateProgram(program.id, editingProgram); setEditingProgram(null) }}>حفظ</Button>
                             <Button variant="outline" onClick={() => setEditingProgram(null)}>إلغاء</Button>
@@ -2244,42 +2197,4 @@ Important notes:
   )
 }
 
-// Function to get localized city names for all supported locales
-const getLocalizedCity = (arabicCity, locale) => {
-  // Basic mapping for major languages
-  const arabicToLocalized = {
-    'نيقوسيا': {
-      en: 'Nicosia', zh: '尼科西亚', es: 'Nicosia', fr: 'Nicosie', de: 'Nikosia', it: 'Nicosia', tr: 'Nikosya', pt: 'Nicósia', ru: 'Никосия', ja: 'ニコシア', ko: '니코시아', hi: 'निकोसिया', fa: 'نیکوسیا', th: 'นิกอเซีย', vi: 'Nicosia', id: 'Nikosia', nl: 'Nicosia', ar: 'نيقوسيا',
-    },
-    'ليماسول': {
-      en: 'Limassol', zh: '利马索尔', es: 'Limassol', fr: 'Limassol', de: 'Limassol', it: 'Limassol', tr: 'Limasol', pt: 'Limassol', ru: 'Лимассол', ja: 'リマソル', ko: '리마솔', hi: 'लिमासोल', fa: 'لیما sol', th: 'ลิมา โซล', vi: 'Limassol', id: 'Limasol', nl: 'Limassol', ar: 'ليماسول',
-    },
-    'لارنكا': {
-      en: 'Larnaca', zh: '拉纳卡', es: 'Larnaca', fr: 'Larnaca', de: 'Larnaca', it: 'Larnaca', tr: 'Larnaka', pt: 'Larnaca', ru: 'Ларнака', ja: 'ラーナカ', ko: '라르나카', hi: 'लार्नाका', fa: 'لارنکا', th: 'ลาร์นา คา', vi: 'Larnaca', id: 'Larnaka', nl: 'Larnaca', ar: 'لارنكا',
-    },
-    'بافوس': {
-      en: 'Paphos', zh: '帕福斯', es: 'Paphos', fr: 'Paphos', de: 'Paphos', it: 'Pafos', tr: 'Pafos', pt: 'Pafos', ru: 'Пафос', ja: 'パフォス', ko: '파포스', hi: 'पफोस', fa: 'پافوس', th: 'พาโฟส', vi: 'Paphos', id: 'Pafos', nl: 'Paphos', ar: 'بافوس',
-    },
-    'فاماغوستا': {
-      en: 'Famagusta', zh: '法马古斯塔', es: 'Famagusta', fr: 'Famagouste', de: 'Famagusta', it: 'Famagusta', tr: 'Famagusta', pt: 'Famagusta', ru: 'Фамагуста', ja: 'ファマグスタ', ko: '파마구스타', hi: 'फमागुस्ता', fa: 'فاماگوستا', th: 'แฟ มา กุส ตา', vi: 'Famagusta', id: 'Famagusta', nl: 'Famagusta', ar: 'فاماغوستا',
-    },
-    'كيرينيا': {
-      en: 'Kyrenia', zh: '基雷尼亚', es: 'Kyrenia', fr: 'Kérenia', de: 'Kyrenia', it: 'Kyrenia', tr: 'Kyrinia', pt: 'Kirenia', ru: 'Кириния', ja: 'キレニア', ko: '키레니아', hi: 'किरीनिया', fa: 'کیرینیا', th: 'คิ รี นี ยา', vi: 'Kyrenia', id: 'Kyrinia', nl: 'Kyrenia', ar: 'كيرينيا',
-    },
-  }
-  return arabicToLocalized[arabicCity]?.[locale] || arabicCity
-}
-
-// Function to get localized country names for all supported locales
-const getLocalizedCountryLabel = (countryValue, locale) => {
-  const country = COUNTRIES.find(c => c.value === countryValue);
-  if (!country) return countryValue;
-  
-  const label = country.label;
-  if (typeof label === 'string') return label;
-  
-  return label[locale] || label.en || label.ar || Object.values(label)[0] || countryValue;
-}
-
 export default UniversitiesManager
-export { COUNTRIES, getLocalizedCity, getLocalizedCountryLabel }

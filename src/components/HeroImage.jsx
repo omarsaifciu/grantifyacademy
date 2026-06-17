@@ -8,7 +8,7 @@ const HeroImage = () => {
         src='https://imagedelivery.net/LqiWLm-3MGbYHtFuUbcBtA/119580eb-abd9-4191-b93a-f01938786700/public' 
         alt='Hostinger Horizons' 
         referrerPolicy='no-referrer'
-        onError={(e) => { e.currentTarget.src = placeholder; }}
+        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = placeholder; }}
       />
     </div>
   );
