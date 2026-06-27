@@ -303,36 +303,44 @@ function generateScriptsCollection(postsPerDay, selectedTopics) {
     const pool = templates && templates.length > 0 ? templates : defaultTemplates;
     const base = pool[i % pool.length];
 
-    const hook = base.hooks[i % base.hooks.length];
     const storyScenes = base.story.map((s) => `${s.visual} — ${s.caption}`).join('\n');
 
+    const hooksText = base.hooks.map((h, idx) => {
+      const labels = ['الأول', 'الثاني', 'الثالث'];
+      return `🪝 الهوك ${labels[idx] || idx + 1} — [نوع: ${h.style}]
+النص المنطوق: "${h.spoken}"
+النص الظاهر: "${h.caption}"
+اللقطة المقترحة: ${h.visual}`;
+    }).join('\n\n');
+
     const fullScript = `🎯 الموضوع: ${topic.label}
-⏱️ المدة: ٣٠-٤٥ ثانية
+👥 الجمهور المستهدف: طلاب ومتقدمين للدراسة
+⏱️ المدة المقترحة: ٣٠-٤٥ ثانية
 
-────────── 🪝 الهوك ──────────
-النوع: ${hook.style}
-النص المنطوق: "${hook.spoken}"
-النص الظاهر: "${hook.caption}"
-اللقطة: ${hook.visual}
+──────────────────────────
+🪝 ٣ هوكات مختلفة (لاختبار A/B)
 
-────────── 📖 الجسم ──────────
+${hooksText}
+──────────────────────────
+
+📖 الجسم (Story)
 ${storyScenes}
 
-────────── 🏁 الخاتمة ──────────
+🏁 الخاتمة (Resolution + CTA)
 ${base.resolution}
 CTA: ${base.cta}
 ${base.loop ? `🔄 نهاية لوب: ${base.loop}` : ''}
 
-────────── 🎵 الصوت ──────────
-${base.audio}
+🎵 الصوت المقترح: ${base.audio}
 
-────────── ✍️ الوصف ──────────
+✍️ وصف المنشور (Caption):
 ${base.caption}
 
-────────── #️⃣ الهاشتاغات ──────────
+#️⃣ الهاشتاغات:
 ${base.hashtags}
 
-📐 مواصفات تقنية: عمودي 9:16 | 1080×1920 | 30fps`;
+📐 مواصفات تقنية: عمودي 9:16 | 1080×1920 | 30fps | بدون علامات مائية
+📊 مؤشرات للقياس بعد النشر: نسبة الإكمال، إعادة المشاهدة، المشاركات عبر DM، الحفظ`;
 
     results.push({
       topic: topic.label,
@@ -341,7 +349,7 @@ ${base.hashtags}
       hashtags: base.hashtags,
       scheduled_at: new Date(Date.now() + (i + 1) * 86400000 + (6 + i) * 3600000).toISOString(),
       status: 'draft',
-      settings: { posts_per_day: postsPerDay, topics: selectedTopics, hook_style: hook.style },
+      settings: { posts_per_day: postsPerDay, topics: selectedTopics },
     });
   }
   return results;
