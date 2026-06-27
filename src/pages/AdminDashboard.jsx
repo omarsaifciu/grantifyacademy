@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import * as TabsComp from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, GraduationCap, Search, Globe } from 'lucide-react';
+import { LogOut, GraduationCap, Search, Globe, Sparkles } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { isAuthenticated, logout } from '@/lib/auth';
@@ -15,6 +15,7 @@ import UsersManager from '@/components/admin/UsersManager';
 import SettingsManager from '@/components/admin/SettingsManager';
 import SmartFilterPage from '@/components/admin/SmartFilterPage';
 import UniversityExplorer from '@/components/admin/UniversityExplorer';
+import AiContentGenerator from '@/components/admin/AiContentGenerator';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const AdminDashboard = () => {
 
           <div className="glass-effect rounded-3xl p-6 md:p-8">
             <TabsComp.Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsComp.TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 mb-8 bg-secondary/80">
+              <TabsComp.TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 mb-8 bg-secondary/80">
                 <TabsComp.TabsTrigger value="universities" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   الجامعات
                 </TabsComp.TabsTrigger>
@@ -90,6 +91,10 @@ const AdminDashboard = () => {
                 </TabsComp.TabsTrigger>
                 <TabsComp.TabsTrigger value="blog" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   المدونة
+                </TabsComp.TabsTrigger>
+                <TabsComp.TabsTrigger value="ai-content" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Sparkles className="ml-1 w-4 h-4" />
+                  الذكاء الاصطناعي
                 </TabsComp.TabsTrigger>
                 <TabsComp.TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   المستخدمين
@@ -109,6 +114,10 @@ const AdminDashboard = () => {
 
               <TabsComp.TabsContent value="smart-filter">
                 <SmartFilterPage />
+              </TabsComp.TabsContent>
+
+              <TabsComp.TabsContent value="ai-content">
+                <AiContentGenerator />
               </TabsComp.TabsContent>
 
               <TabsComp.TabsContent value="scholarships">

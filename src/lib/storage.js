@@ -1124,6 +1124,57 @@ export const updateAiSkills = async (skills) => {
   return skills
 }
 
+// ============================================================
+// AI CONTENT (Supabase or localStorage)
+// ============================================================
+export const getAiContent = async () => {
+  if (USE_LOCAL) {
+    const data = localStorage.getItem('kktc_ai_content')
+    return data ? JSON.parse(data) : []
+  }
+  if (!supabase) throw new Error('Supabase not configured')
+  const { data } = await supabase.from('ai_content').select('*').order('created_at', { ascending: false })
+  return data ?? []
+}
+
+export const createAiContent = async (item) => {
+  if (USE_LOCAL) {
+    const list = await getAiContent()
+    const stored = { id: Date.now().toString(), ...item, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    localStorage.setItem('kktc_ai_content', JSON.stringify([stored, ...list]))
+    return stored
+  }
+  if (!supabase) throw new Error('Supabase not configured')
+  const { data, error } = await supabase.from('ai_content').insert(item).select().single()
+  if (error) throw error
+  return data
+}
+
+export const deleteAiContent = async (id) => {
+  if (USE_LOCAL) {
+    const list = await getAiContent()
+    localStorage.setItem('kktc_ai_content', JSON.stringify(list.filter((i) => i.id !== id)))
+    return true
+  }
+  if (!supabase) throw new Error('Supabase not configured')
+  const { error } = await supabase.from('ai_content').delete().eq('id', id)
+  if (error) throw error
+  return true
+}
+
+export const updateAiContent = async (id, updates) => {
+  if (USE_LOCAL) {
+    const list = await getAiContent()
+    const updated = list.map((i) => (i.id === id ? { ...i, ...updates, updated_at: new Date().toISOString() } : i))
+    localStorage.setItem('kktc_ai_content', JSON.stringify(updated))
+    return updated.find((i) => i.id === id)
+  }
+  if (!supabase) throw new Error('Supabase not configured')
+  const { data, error } = await supabase.from('ai_content').update(updates).eq('id', id).select().single()
+  if (error) throw error
+  return data
+}
+
 export default {
   getUniversities,
   getUniversityById,
@@ -1166,6 +1217,10 @@ export default {
   updateSettings,
   getAiSkills,
   updateAiSkills,
+  getAiContent,
+  createAiContent,
+  deleteAiContent,
+  updateAiContent,
   uploadImage,
   computeIntakeStatus,
 }
